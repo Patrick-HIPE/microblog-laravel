@@ -9,27 +9,39 @@ import { route } from 'ziggy-js';
 import { useState, useEffect } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Create Post', href: '/posts/create' },
+    { title: 'Edit Post', href: '/posts/update' },
 ];
 
-export default function Create() {
-    const { data, setData, post, processing, errors, reset } = useForm<{ content: string; image: File | null }>({
-        content: '',
+interface Post {
+    id: number;
+    content: string;
+    image_url?: string | null;
+}
+
+interface Props {
+    post: Post;
+}
+
+export default function Update({ post }: Props) {
+    const { data, setData, put, processing, errors, delete: destroy } = useForm<{
+        content: string;
+        image: File | null;
+    }>({
+        content: post.content ?? '',
         image: null,
     });
 
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(post.image_url || null);
 
     useEffect(() => {
         if (data.image) {
             const url = URL.createObjectURL(data.image);
             setImagePreview(url);
-
             return () => URL.revokeObjectURL(url);
         } else {
-            setImagePreview(null);
+            setImagePreview(post.image_url ?? null);
         }
-    }, [data.image]);
+    }, [data.image, post.image_url]);
 
     function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0] ?? null;
@@ -38,22 +50,34 @@ export default function Create() {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(route('posts.store'), {
+        put(route('posts.update', post.id), {
             forceFormData: true,
-            onSuccess: () => {
-                reset();
-                setImagePreview(null);
-            },
         });
+    }
+
+    function handleDelete() {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        destroy(route('posts.destroy', post.id));
     }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create Post" />
+            <Head title="Edit Post" />
             <div className="mx-auto w-full max-w-2xl space-y-6">
-                <h1 className="text-2xl font-semibold text-foreground mt-6">Create Post</h1>
+                <div className="flex items-center justify-between mt-6">
+                    <h1 className="text-2xl font-semibold text-foreground m-0">Edit Post</h1>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={handleDelete}
+                        className="cursor-pointer"
+                    >
+                        Delete
+                    </Button>
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Content Field */}
                     <div className="space-y-2">
                         <Label htmlFor="post-content">Content</Label>
                         <Textarea
@@ -66,7 +90,7 @@ export default function Create() {
                         {errors.content && <p className="text-sm text-red-500">{errors.content}</p>}
                     </div>
 
-                    {/* Image Upload */}
+                    {/* Image Upload Field */}
                     <div className="space-y-2">
                         <Label htmlFor="post-image">Image</Label>
                         <Input

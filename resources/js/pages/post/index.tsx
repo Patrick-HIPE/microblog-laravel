@@ -1,8 +1,9 @@
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { route } from 'ziggy-js';
+import { Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Post {
     id: number;
@@ -16,7 +17,7 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'My Posts', href: '/posts' },
+    { title: 'My Posts', href: route('posts.index') },
 ];
 
 export default function Index({ posts }: Props) {
@@ -36,13 +37,19 @@ export default function Index({ posts }: Props) {
                 ) : (
                     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
                         {posts.map((post) => (
-                            <div key={post.id} className="border rounded-lg shadow-sm overflow-hidden bg-white">
-                                <div className="p-4 space-y-2"> {/* Caption on top */}
+                            <div
+                                key={post.id}
+                                className="relative block border rounded-lg shadow-sm overflow-hidden bg-white hover:shadow-md transition"
+                            >
+                                {/* Content */}
+                                <div className="p-4 space-y-2">
                                     <p className="text-sm text-gray-800">{post.content}</p>
                                     <p className="text-xs text-gray-400">
                                         {new Date(post.created_at).toLocaleString()}
                                     </p>
                                 </div>
+
+                                {/* Image */}
                                 {post.image_url && (
                                     <img
                                         src={post.image_url}
@@ -50,6 +57,15 @@ export default function Index({ posts }: Props) {
                                         className="w-full h-48 object-cover"
                                     />
                                 )}
+
+                                {/* Edit icon */}
+                                <Link
+                                    href={route('posts.edit', post.id)}
+                                    className="absolute bottom-2 right-2 flex items-center gap-1 bg-white/80 px-2 py-1 rounded"
+                                >
+                                    <Pencil className="w-4 h-4 text-gray-700" />
+                                    <span className="text-xs text-gray-700">Edit</span>
+                                </Link>
                             </div>
                         ))}
                     </div>

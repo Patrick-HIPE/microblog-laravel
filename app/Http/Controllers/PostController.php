@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Post;
 use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -44,11 +45,42 @@ class PostController extends Controller
 
         Post::create($data);
 
-        return redirect()->route('posts.index');
+        return redirect()->route('posts.index')->with('message', 'Post created successfully!');
     }
 
     public function edit(Post $post)
     {
-        // return Inertia::render('posts/edit');
+        $post->image_url = $post->image ? Storage::url($post->image) : null;
+        
+        return Inertia::render('post/edit', [
+            'post' => $post,
+        ]);
+    }
+
+    public function update(UpdatePostRequest $request, Post $post)
+    {
+        $data = $request->validated();
+
+        if ($request->hasFile('image')) {
+            if ($post->image) {
+                Storage::disk('public')->delete($post->image);
+            }
+            $data['image'] = $request->file('image')->store('posts', 'public');
+        }
+
+        $post->update($data);
+
+        return redirect()->route('posts.index')->with('message', 'Post updated successfully!');
+    }
+
+    public function destroy(Post $post)
+    {
+        if ($post->image) {
+            Storage::disk('public')->delete($post->image);
+        }
+
+        $post->delete();
+
+        return redirect()->route('posts.index')->with('message', 'Post deleted successfully!');
     }
 }
