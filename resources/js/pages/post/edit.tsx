@@ -82,6 +82,7 @@ export default function Update({ post }: Props) {
                         <Label htmlFor="post-content">Content</Label>
                         <Textarea
                             id="post-content"
+                            name="content"
                             value={data.content}
                             onChange={(e) => setData('content', e.target.value)}
                             placeholder="What's on your mind?"
@@ -95,6 +96,7 @@ export default function Update({ post }: Props) {
                         <Label htmlFor="post-image">Image</Label>
                         <Input
                             id="post-image"
+                            name="image"
                             type="file"
                             accept="image/png, image/jpg, image/jpeg, image/webp"
                             onChange={handleImageChange}

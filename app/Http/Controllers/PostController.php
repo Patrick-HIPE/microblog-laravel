@@ -36,7 +36,6 @@ class PostController extends Controller
     public function store(StorePostRequest $request)
     {
         $data = $request->validated();
-
         $data['user_id'] = Auth::id();
 
         if ($request->hasFile('image')) {
@@ -44,7 +43,6 @@ class PostController extends Controller
         }
 
         Post::create($data);
-
         return redirect()->route('posts.index')->with('message', 'Post created successfully!');
     }
 
