@@ -63,7 +63,10 @@ class PostController extends Controller
             if ($post->image) {
                 Storage::disk('public')->delete($post->image);
             }
+            
             $data['image'] = $request->file('image')->store('posts', 'public');
+        } else {
+            unset($data['image']);
         }
 
         $post->update($data);

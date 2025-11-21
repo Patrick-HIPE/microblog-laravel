@@ -5,6 +5,10 @@ import { route } from 'ziggy-js';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'My Posts', href: route('posts.index') },
+];
+
 interface Post {
     id: number;
     content: string;
@@ -15,10 +19,6 @@ interface Post {
 interface Props {
     posts: Post[];
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'My Posts', href: route('posts.index') },
-];
 
 export default function Index({ posts }: Props) {
     return (
