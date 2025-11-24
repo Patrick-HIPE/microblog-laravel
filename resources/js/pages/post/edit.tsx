@@ -24,19 +24,15 @@ interface Props {
 }
 
 export default function Update({ post }: Props) {
-  const { data, setData, put, processing, errors, delete: destroy } = useForm<{
-    content: string;
-    image: File | null;
-    removeImage: boolean;
-  }>({
+  const { data, setData, post: submitPost, processing, errors, delete: destroy } = useForm({
+    _method: 'PUT', 
     content: post.content,
-    image: null,
+    image: null as File | null, 
     removeImage: false,
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(post.image_url || null);
 
-  // Update preview when user selects a new file
   useEffect(() => {
     if (data.image instanceof File) {
       const url = URL.createObjectURL(data.image);
@@ -62,7 +58,7 @@ export default function Update({ post }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    put(route('posts.update', post.id), {
+    submitPost(route('posts.update', post.id), {
       forceFormData: true,
     });
   }
