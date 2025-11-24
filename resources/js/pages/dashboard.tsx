@@ -10,7 +10,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface Post {
     id: number;
-    title: string;
     content: string;
     image_url: string | null;
     created_at: string;
@@ -37,7 +36,6 @@ export default function Dashboard({ posts }: DashboardProps) {
                                         <div className="aspect-video w-full overflow-hidden">
                                             <img 
                                                 src={post.image_url} 
-                                                alt={post.title} 
                                                 className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                             />
                                         </div>
@@ -49,7 +47,7 @@ export default function Dashboard({ posts }: DashboardProps) {
 
                                     <div className="p-4">
                                         <h3 className="mb-2 truncate text-lg font-bold text-neutral-900 dark:text-white">
-                                            {post.title}
+                                            {post.content.slice(0, 50)}
                                         </h3>
                                         <p className="mb-4 line-clamp-3 text-sm text-neutral-600 dark:text-neutral-400">
                                             {post.content}

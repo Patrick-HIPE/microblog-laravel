@@ -54,9 +54,10 @@ export default function Index({ posts }: Props) {
                                             <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/10 dark:stroke-neutral-100/10" />
                                         </div>
                                     )}
-
+                                    
                                     <div className="p-4">
                                         <h3 className="mb-2 truncate text-lg font-bold text-neutral-900 dark:text-white">
+                                            {post.content.slice(0, 50)}
                                         </h3>
                                         <p className="mb-4 line-clamp-3 text-sm text-neutral-600 dark:text-neutral-400">
                                             {post.content}
