@@ -60,68 +60,68 @@ export default function Create() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Post" />
-            <div className="mx-auto w-full max-w-2xl space-y-6">
-                
-                <h1 className="text-2xl font-semibold text-foreground mt-6">Create Post</h1>
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+                <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+                    <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">Create Post</h2>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Content */}
-                    <div className="space-y-2">
-                        <Label htmlFor="content">Content</Label>
-                        <Textarea
-                            id="content"
-                            value={data.content}
-                            onChange={(e) => setData('content', e.target.value)}
-                            placeholder="What's on your mind?"
-                            className="min-h-[100px]"
-                        />
-                        {errors.content && <p className="text-sm text-red-500">{errors.content}</p>}
-                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Content */}
+                        <div className="space-y-2">
+                            <Label htmlFor="content">Content</Label>
+                            <Textarea
+                                id="content"
+                                value={data.content}
+                                onChange={(e) => setData('content', e.target.value)}
+                                placeholder="What's on your mind?"
+                                className="min-h-[100px]"
+                            />
+                            {errors.content && <p className="text-sm text-red-500">{errors.content}</p>}
+                        </div>
 
-                    {/* Image Upload */}
-                    <div className="space-y-2">
-                        <Label htmlFor="image">Image</Label>
-                        <Input
-                            id="image"
-                            type="file"
-                            accept="image/png, image/jpg, image/jpeg, image/webp"
-                            onChange={handleImageChange}
-                            ref={fileInputRef}
-                            className="mt-1 block w-full text-sm text-gray-700 cursor-pointer"
-                        />
-                        {errors.image && <p className="text-sm text-red-500">{errors.image}</p>}
+                        {/* Image Upload */}
+                        <div className="space-y-2">
+                            <Label htmlFor="image">Image</Label>
+                            <Input
+                                id="image"
+                                type="file"
+                                accept="image/png, image/jpg, image/jpeg, image/webp"
+                                onChange={handleImageChange}
+                                ref={fileInputRef}
+                                className="mt-1 block w-full text-sm text-gray-700 cursor-pointer"
+                            />
+                            {errors.image && <p className="text-sm text-red-500">{errors.image}</p>}
 
-                        {/* Image Preview with Remove Button */}
-                        {imagePreview && (
-                            <div className="relative mt-2">
-                                <img
-                                    src={imagePreview}
-                                    alt="Preview"
-                                    className="rounded-lg max-h-64 border object-cover"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleRemoveImage}
-                                    className="absolute top-2 right-2 bg-white/30 hover:bg-white/50 rounded-full p-1"
-                                    title="Remove image"
-                                >
-                                    <X className="w-4 h-4 text-black cursor-pointer" />
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                            {/* Image Preview with Remove Button */}
+                            {imagePreview && (
+                                <div className="relative mt-2">
+                                    <img
+                                        src={imagePreview}
+                                        alt="Preview"
+                                        className="rounded-lg max-h-64 border object-cover"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveImage}
+                                        className="absolute top-2 right-2 bg-white/30 hover:bg-white/50 rounded-full p-1"
+                                        title="Remove image"
+                                    >
+                                        <X className="w-4 h-4 text-black cursor-pointer" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
 
-                    {/* Submit */}
-                    <div>
-                        <Button
-                            type="submit"
-                            disabled={processing || !data.content}
-                            className="cursor-pointer"
-                        >
-                            {processing ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                    </div>
-                </form>
+                        <div>
+                            <Button
+                                type="submit"
+                                disabled={processing || !data.content}
+                                className="cursor-pointer"
+                            >
+                                {processing ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </AppLayout>
     );
