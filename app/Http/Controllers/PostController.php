@@ -10,9 +10,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-
 class PostController extends Controller
 {
+    /**
+     * Display a listing of the posts for the authenticated user.
+     */
     public function index()
     {
         $posts = Post::where('user_id', Auth::id())
@@ -28,11 +30,17 @@ class PostController extends Controller
         ]);
     }
 
+    /**
+     * Show the form for creating a new post.
+     */
     public function create()
     {
         return Inertia::render('post/create');
     }
 
+    /**
+     * Store a newly created post in storage.
+     */
     public function store(StorePostRequest $request)
     {
         $data = $request->validated();
@@ -43,18 +51,37 @@ class PostController extends Controller
         }
 
         Post::create($data);
+
         return redirect()->route('posts.index')->with('message', 'Post created successfully!');
     }
 
+    /**
+     * Display a specific post.
+     */
+    public function show(Post $post)
+    {
+        $post->image_url = $post->image ? Storage::url($post->image) : null;
+
+        return Inertia::render('post/show', [
+            'post' => $post,
+        ]);
+    }
+
+    /**
+     * Show the form for editing a post.
+     */
     public function edit(Post $post)
     {
         $post->image_url = $post->image ? Storage::url($post->image) : null;
-        
+
         return Inertia::render('post/edit', [
             'post' => $post,
         ]);
     }
 
+    /**
+     * Update the specified post in storage.
+     */
     public function update(UpdatePostRequest $request, Post $post)
     {
         $data = $request->validated();
@@ -64,25 +91,25 @@ class PostController extends Controller
                 Storage::disk('public')->delete($post->image);
             }
             $data['image'] = $request->file('image')->store('posts', 'public');
-        } 
-        elseif ($request->boolean('removeImage')) {
+        } elseif ($request->boolean('removeImage')) {
             if ($post->image) {
                 Storage::disk('public')->delete($post->image);
             }
             $data['image'] = null;
-        } 
-        else {
+        } else {
             unset($data['image']);
         }
 
-        unset($data['_method']);
-        unset($data['removeImage']);
+        unset($data['_method'], $data['removeImage']);
 
         $post->update($data);
 
         return redirect()->route('posts.index')->with('message', 'Post updated successfully!');
     }
 
+    /**
+     * Remove the specified post from storage.
+     */
     public function destroy(Post $post)
     {
         if ($post->image) {

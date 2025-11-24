@@ -2,7 +2,8 @@ import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Home', href: dashboard().url },
@@ -21,6 +22,10 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ posts }: DashboardProps) {
+    const handlePostClick = (postId: number) => {
+        router.get(route('posts.show', postId));
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
@@ -31,7 +36,11 @@ export default function Dashboard({ posts }: DashboardProps) {
                     {posts?.length ? (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {posts.map((post) => (
-                                <div key={post.id} className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
+                                <div 
+                                    key={post.id} 
+                                    className="cursor-pointer overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800 hover:shadow-lg transition-shadow"
+                                    onClick={() => handlePostClick(post.id)}
+                                >
                                     {post.image_url ? (
                                         <div className="aspect-video w-full overflow-hidden">
                                             <img 
