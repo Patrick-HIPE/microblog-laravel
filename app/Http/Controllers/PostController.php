@@ -55,31 +55,26 @@ class PostController extends Controller
         ]);
     }
 
-public function update(UpdatePostRequest $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post)
     {
         $data = $request->validated();
 
-        // 1. Handle New Image Upload
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($post->image) {
                 Storage::disk('public')->delete($post->image);
             }
             $data['image'] = $request->file('image')->store('posts', 'public');
         } 
-        // 2. Handle Explicit Removal (Checking the boolean flag from frontend)
         elseif ($request->boolean('removeImage')) {
             if ($post->image) {
                 Storage::disk('public')->delete($post->image);
             }
             $data['image'] = null;
         } 
-        // 3. Keep Existing Image (Logic: remove 'image' key so validation/update ignores it)
         else {
             unset($data['image']);
         }
 
-        // Remove the auxiliary fields before updating the model
         unset($data['_method']);
         unset($data['removeImage']);
 

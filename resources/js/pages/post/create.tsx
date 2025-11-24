@@ -61,6 +61,7 @@ export default function Create() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Post" />
             <div className="mx-auto w-full max-w-2xl space-y-6">
+                
                 <h1 className="text-2xl font-semibold text-foreground mt-6">Create Post</h1>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
