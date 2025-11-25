@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
@@ -28,6 +28,17 @@ interface Props {
 }
 
 export default function Index({ posts }: Props) {
+
+    function handleDelete(postId: number) {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+
+        router.delete(route('posts.destroy', postId), {
+            onSuccess: () => {
+                console.log('Post deleted successfully');
+            },
+        });
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="My Posts" />
@@ -78,12 +89,13 @@ export default function Index({ posts }: Props) {
                                                         </Link>
                                                     </DropdownMenuItem>
 
-                                                    <DropdownMenuItem
-                                                        className="flex items-center gap-2 cursor-pointer"
-                                                    >
-                                                        <Trash className="h-4 w-4" />
-                                                        Delete
-                                                    </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    className="flex items-center gap-2 cursor-pointer"
+                                                    onClick={() => handleDelete(post.id)}
+                                                >
+                                                    <Trash className="h-4 w-4" />
+                                                    Delete
+                                                </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </div>

@@ -27,7 +27,7 @@ export default function ShowPost({ post }: ShowPostProps) {
             <Head title="View Post" />
 
             <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-                <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800 max-w-full md:max-w-3xl mx-auto">
+                <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800 max-w-full md:max-w-3xl">
                     {post.image_url ? (
                         <div className="w-full overflow-hidden">
                             <img
