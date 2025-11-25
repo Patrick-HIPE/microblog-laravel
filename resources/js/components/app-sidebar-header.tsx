@@ -1,7 +1,7 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem } from '@/types';
-import { GlobalSearch } from '@/components/global-search'; // <--- 1. Import here
+import { GlobalSearch } from '@/components/global-search';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) {
     return (
@@ -11,7 +11,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
 
-            {/* 2. Add the Search Component here with ml-auto */}
+            {/* Search User */}
             <div className="ml-auto flex items-center gap-2">
                 <GlobalSearch />
             </div>

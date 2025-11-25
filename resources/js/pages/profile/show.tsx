@@ -17,6 +17,8 @@ export interface User {
     created_at: string;
     updated_at: string;
     avatar_url?: string | null;
+    followers: { id: number }[];
+    following: { id: number }[];
 }
 
 export interface Post {
@@ -54,39 +56,54 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
                 <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
 
                     {/* Profile Header */}
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            {user.avatar_url ? (
-                                <img
-                                    src={user.avatar_url}
-                                    alt={user.name}
-                                    className="w-20 h-20 rounded-full object-cover"
-                                />
-                            ) : (
-                                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
-                                    <UserIcon className="h-10 w-10 text-neutral-500 dark:text-neutral-300" />
-                                </div>
-                            )}
-                            <div>
-                                <h2 className="text-2xl font-bold">{user.name}</h2>
-                                <p className="text-neutral-600 dark:text-neutral-400">{user.email}</p>
-                            </div>
-                        </div>
+<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="flex items-center gap-4">
+        {user.avatar_url ? (
+            <img
+                src={user.avatar_url}
+                alt={user.name}
+                className="w-20 h-20 rounded-full object-cover"
+            />
+        ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
+                <UserIcon className="h-10 w-10 text-neutral-500 dark:text-neutral-300" />
+            </div>
+        )}
+        <div>
+            <h2 className="text-2xl font-bold">{user.name}</h2>
+            <p className="text-neutral-600 dark:text-neutral-400">{user.email}</p>
+        </div>
+    </div>
 
-                        {/* Follow/Unfollow button */}
-                        {!isOwnProfile && (
-                            <button
-                                onClick={toggleFollow}
-                                className={`px-4 py-2 rounded-lg font-semibold text-white transition-colors  cursor-pointer ${
-                                    isFollowed 
-                                        ? "bg-neutral-500 hover:bg-neutral-600" 
-                                        : "bg-blue-600 hover:bg-blue-700"
-                                }`}
-                            >
-                                {isFollowed ? "Followed" : "Follow"}
-                            </button>
-                        )}
-                    </div>
+    {/* Followers / Following Buttons */}
+    <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
+        <button
+            onClick={() => router.get(route('profile.followers', { user: user.id }))}
+            className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600 transition cursor-pointer"
+        >
+            Followers ({user.followers.length})
+        </button>
+
+        <button
+            onClick={() => router.get(route('profile.following', { user: user.id }))}
+            className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600 transition cursor-pointer"
+        >
+            Following ({user.following.length})
+        </button>
+
+        {/* Follow/Unfollow button */}
+        {!isOwnProfile && (
+            <button
+                onClick={toggleFollow}
+                className={`px-4 py-2 rounded-lg font-semibold text-white transition-colors ${
+                    isFollowed ? "bg-neutral-500 hover:bg-neutral-600" : "bg-blue-600 hover:bg-blue-700"
+                }`}
+            >
+                {isFollowed ? "Followed" : "Follow"}
+            </button>
+        )}
+    </div>
+</div>
 
                     <hr className="my-6" />
 

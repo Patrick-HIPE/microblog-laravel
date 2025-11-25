@@ -11,7 +11,6 @@ class SearchController extends Controller
     {
         $query = $request->input('query');
 
-        // Return empty array if no query to save database calls
         if (!$query) {
             return response()->json([]);
         }
@@ -20,10 +19,9 @@ class SearchController extends Controller
         $users = User::query()
             ->where('name', 'like', "%{$query}%")
             ->orWhere('email', 'like', "%{$query}%")
-            ->limit(5) // Limit to 5 to keep UI clean
-            ->get(['id', 'name', 'email']); // Only select what you need!
+            ->limit(5)
+            ->get(['id', 'name', 'email']); 
 
-        // Future-proofing: You can easily add 'posts' => $posts here later
         return response()->json([
             'users' => $users,
         ]);
