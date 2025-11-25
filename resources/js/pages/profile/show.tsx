@@ -69,7 +69,7 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
                             )}
                             <div>
                                 <h2 className="text-2xl font-bold">{user.name}</h2>
-                                <p className="text-neutral-600 dark:text-neutral-400">@{user.name}</p>
+                                <p className="text-neutral-600 dark:text-neutral-400">{user.email}</p>
                             </div>
                         </div>
 
