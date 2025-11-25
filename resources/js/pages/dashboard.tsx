@@ -1,9 +1,10 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
-import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
+import { PlaceholderPattern } from '../components/ui/placeholder-pattern';
+import AppLayout from '../layouts/app-layout';
+import { dashboard } from '../routes';
+import { type BreadcrumbItem } from '../types';
 import { Head, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
+import { Heart } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Home', href: dashboard().url },
@@ -15,15 +16,25 @@ interface Post {
     image_url: string | null;
     created_at: string;
     updated_at: string;
+    likes_count: number;
+    liked_by_user: boolean;
 }
 
 interface DashboardProps {
     posts?: Post[];
 }
 
-export default function Dashboard({ posts }: DashboardProps) {
+export default function Dashboard({ posts = [] }: DashboardProps) {
+
     const handlePostClick = (postId: number) => {
         router.get(route('posts.show', postId));
+    };
+
+    const toggleLike = (postId: number) => {
+        router.post(route('posts.toggle-like', postId), {}, {
+            preserveScroll: true, 
+            preserveState: true,  
+        });
     };
 
     return (
@@ -33,19 +44,34 @@ export default function Dashboard({ posts }: DashboardProps) {
                 <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
                     <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">Recent Posts</h2>
 
-                    {posts?.length ? (
+                    {posts.length ? (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {posts.map((post) => (
-                                <div 
-                                    key={post.id} 
-                                    className="cursor-pointer overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800 hover:shadow-lg transition-shadow"
+                                <div
+                                    key={post.id}
+                                    className="group relative cursor-pointer overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
                                     onClick={() => handlePostClick(post.id)}
                                 >
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleLike(post.id);
+                                        }}
+                                        className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-sm transition-all hover:bg-red-50 hover:text-red-600 dark:bg-neutral-900/80 dark:text-neutral-300 dark:hover:bg-neutral-800 cursor-pointer"
+                                    >
+                                        <Heart
+                                            className={`h-4 w-4 transition-colors duration-200 ${
+                                                post.liked_by_user ? 'fill-red-500 text-red-500' : 'text-neutral-500 dark:text-neutral-400'
+                                            }`}
+                                        />
+                                        <span>{post.likes_count ?? 0}</span>
+                                    </button>
+
                                     {post.image_url ? (
                                         <div className="aspect-video w-full overflow-hidden">
-                                            <img 
-                                                src={post.image_url} 
-                                                className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                                            <img
+                                                src={post.image_url}
+                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                             />
                                         </div>
                                     ) : (
@@ -54,14 +80,15 @@ export default function Dashboard({ posts }: DashboardProps) {
                                         </div>
                                     )}
 
-                                    <div className="p-4">
+                                    <div className="p-4 pb-12">
                                         <h3 className="mb-2 truncate text-lg font-bold text-neutral-900 dark:text-white">
                                             {post.content.slice(0, 50)}
                                         </h3>
                                         <p className="mb-4 line-clamp-3 text-sm text-neutral-600 dark:text-neutral-400">
                                             {post.content}
                                         </p>
-                                        <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-500">
+                                        
+                                        <div className="flex items-center justify-end text-xs text-neutral-500 dark:text-neutral-500">
                                             <span>{new Date(post.created_at).toLocaleString()}</span>
                                         </div>
                                     </div>
