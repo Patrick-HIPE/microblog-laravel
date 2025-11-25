@@ -1,6 +1,7 @@
 import AppLayout from "@/layouts/app-layout";
-import { Head, Link, router } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { PlaceholderPattern } from "@/components/ui/placeholder-pattern";
+import { User as UserIcon } from "lucide-react";
 import { BreadcrumbItem } from "@/types";
 import { useState } from "react";
 import { route } from "ziggy-js";
@@ -55,14 +56,20 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
                     {/* Profile Header */}
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <img
-                                src={user.avatar_url || "/default-avatar.png"}
-                                alt={user.name}
-                                className="w-20 h-20 rounded-full object-cover"
-                            />
+                            {user.avatar_url ? (
+                                <img
+                                    src={user.avatar_url}
+                                    alt={user.name}
+                                    className="w-20 h-20 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
+                                    <UserIcon className="h-10 w-10 text-neutral-500 dark:text-neutral-300" />
+                                </div>
+                            )}
                             <div>
                                 <h2 className="text-2xl font-bold">{user.name}</h2>
-                                <p className="text-neutral-600">@{user.name}</p>
+                                <p className="text-neutral-600 dark:text-neutral-400">@{user.name}</p>
                             </div>
                         </div>
 
