@@ -5,6 +5,7 @@ import { User as UserIcon } from "lucide-react";
 import { BreadcrumbItem } from "@/types";
 import { useState } from "react";
 import { route } from "ziggy-js";
+import { Button } from "@/components/ui/button";
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Profile', href: '/profile' },
@@ -81,29 +82,29 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
 
                         {/* Followers / Following Buttons */}
                         <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
-                            <button
+                            <Button
                                 onClick={() => router.get(route('profile.followers', { user: user.id }))}
-                                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600 transition cursor-pointer"
+                                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-black dark:text-white transition-colors cursor-pointer"
                             >
                                 Followers ({user.followers.length})
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
                                 onClick={() => router.get(route('profile.following', { user: user.id }))}
-                                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600 transition cursor-pointer"
+                                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-black dark:text-white transition-colors cursor-pointer"
                             >
                                 Following ({user.following.length})
-                            </button>
+                            </Button>
 
                             {!isOwnProfile && (
-                                <button
+                                <Button
                                     onClick={toggleFollow}
                                     className={`px-4 py-2 rounded-lg font-semibold text-white transition-colors cursor-pointer ${
                                         isFollowed ? "bg-neutral-500 hover:bg-neutral-600" : "bg-blue-600 hover:bg-blue-700"
                                     }`}
                                 >
                                     {isFollowed ? "Followed" : "Follow"}
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </div>
