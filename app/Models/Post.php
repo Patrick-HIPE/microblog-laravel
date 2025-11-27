@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
-
 class Post extends Model
 {
     protected $fillable = [
@@ -23,5 +22,10 @@ class Post extends Model
     public function likes()
     {
         return $this->belongsToMany(User::class, 'likes')->withTimestamps();
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
     }
 }
