@@ -17,17 +17,15 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with(['user', 'comments.user']) 
-            ->withCount(['comments', 'likes'])
+        $posts = Post::where('user_id', Auth::id())
             ->latest()
             ->get()
             ->map(function ($post) {
                 $post->image_url = $post->image ? Storage::url($post->image) : null;
-                $post->liked_by_user = $post->likes->contains('user_id', Auth::id());
                 return $post;
             });
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('post/index', [
             'posts' => $posts,
         ]);
     }
