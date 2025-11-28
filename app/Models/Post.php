@@ -21,7 +21,7 @@ class Post extends Model
 
     public function likes()
     {
-        return $this->belongsToMany(User::class, 'likes')->withTimestamps();
+        return $this->hasMany(Like::class);
     }
 
     public function comments()

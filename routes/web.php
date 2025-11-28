@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\CommentController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -23,9 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Post routes
     Route::resource('posts', PostController::class);
     // Like route
-    Route::post('/posts/{post}/like', [App\Http\Controllers\LikeController::class, 'toggle'])->name('posts.toggle-like');
+    Route::post('/posts/{post}/like', [LikeController::class, 'toggle'])->name('posts.toggle-like');
     // Comment route
-    
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('comments.store')->middleware('auth');
     // Profile routes 
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/users/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])->name('users.toggle-follow');
