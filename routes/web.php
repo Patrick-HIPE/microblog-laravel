@@ -26,7 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Like route
     Route::post('/posts/{post}/like', [LikeController::class, 'toggle'])->name('posts.toggle-like');
     // Comment route
-    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('comments.store')->middleware('auth');
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
     // Profile routes 
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/users/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])->name('users.toggle-follow');

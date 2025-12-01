@@ -11,17 +11,20 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $posts = Post::with('user')
-            ->withCount('likes') // Total likes per post
+        $posts = Post::with([
+                'user', 
+                'comments.user'
+            ])
+            ->withCount(['likes', 'comments'])
             ->with(['likes' => function ($query) {
-                $query->where('user_id', Auth::id()); // Check if current user liked
+                $query->where('user_id', Auth::id());
             }])
             ->latest()
             ->paginate(10);
 
         $posts->getCollection()->transform(function ($post) {
             $post->image_url = $post->image ? Storage::url($post->image) : null;
-            $post->liked_by_user = $post->likes->isNotEmpty(); // true if current user liked
+            $post->liked_by_user = $post->likes->isNotEmpty();
             return $post;
         });
 

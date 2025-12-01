@@ -19,6 +19,6 @@ class CommentController extends Controller
             'body' => $data['body'],
         ]);
 
-        return redirect()->back()->with('message', 'Comment created successfully!');
+        return redirect()->route('dashboard')->with('message', 'Comment created successfully!');
     }
 }
