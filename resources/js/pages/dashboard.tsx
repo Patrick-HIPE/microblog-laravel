@@ -4,7 +4,7 @@ import { dashboard } from '../routes';
 import { type BreadcrumbItem } from '../types';
 import { Head, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
-import { Heart, MessageCircle, X, User } from 'lucide-react';
+import { Heart, MessageCircle, X, User, Repeat2 } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -30,6 +30,7 @@ interface Post {
     updated_at: string;
     likes_count: number;
     comments_count?: number;
+    shares_count?: number;
     liked_by_user: boolean;
     comments?: Comment[];
 }
@@ -141,6 +142,12 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
                                         >
                                             <MessageCircle className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
                                             <span>{post.comments_count ?? 0}</span>
+                                        </button>
+                                        <button
+                                            className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-sm transition-all hover:bg-blue-50 hover:text-blue-600 dark:bg-neutral-900/80 dark:text-neutral-300 dark:hover:bg-neutral-800 cursor-pointer"
+                                        >
+                                            <Repeat2 className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                                            <span>{post.shares_count ?? 0}</span>
                                         </button>
                                     </div>
 
