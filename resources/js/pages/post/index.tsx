@@ -1,10 +1,11 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react'; 
 import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import FlashMessage from '@/components/flash-message';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -42,6 +43,7 @@ export default function Index({ posts }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="My Posts" />
+            <FlashMessage />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
                     <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">My Posts</h2>
@@ -89,13 +91,13 @@ export default function Index({ posts }: Props) {
                                                         </Link>
                                                     </DropdownMenuItem>
 
-                                                <DropdownMenuItem
-                                                    className="flex items-center gap-2 cursor-pointer"
-                                                    onClick={() => handleDelete(post.id)}
-                                                >
-                                                    <Trash className="h-4 w-4" />
-                                                    Delete
-                                                </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600"
+                                                        onClick={() => handleDelete(post.id)}
+                                                    >
+                                                        <Trash className="h-4 w-4" />
+                                                        Delete
+                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </div>
