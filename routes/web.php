@@ -23,10 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/global-search', SearchController::class)->name('global.search');
     // Post routes
     Route::resource('posts', PostController::class);
-    // Like route
-    Route::post('/posts/{post}/like', [LikeController::class, 'toggle'])->name('posts.toggle-like');
-    // Comment route
-    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
+    Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.toggle-like');
+    Route::post('/posts/{post}/comments', [PostController::class, 'comment'])->name('posts.comments.store');
     // Profile routes 
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/users/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])->name('users.toggle-follow');

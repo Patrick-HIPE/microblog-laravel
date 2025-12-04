@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use App\Models\Post;
+use App\Models\Like;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use App\Http\Requests\StoreCommentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -119,5 +121,41 @@ class PostController extends Controller
         $post->delete();
 
         return redirect()->route('posts.index')->with('message', 'Post deleted successfully!');
+    }
+
+    public function like(Post $post)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403, 'You must be logged in to like a post.');
+        }
+
+        $like = Like::where('user_id', $user->id)
+                    ->where('post_id', $post->id)
+                    ->first();
+
+        if ($like) {
+            $like->delete();
+        } else {
+            Like::create([
+                'user_id' => $user->id,
+                'post_id' => $post->id,
+            ]);
+        }
+
+        return back();
+    }
+
+    public function comment(StoreCommentRequest $request, Post $post) 
+    {
+        $data = $request->validated();
+
+        $post->comments()->create([
+            'user_id' => $request->user()->id,
+            'body' => $data['body'],
+        ]);
+
+        return redirect()->route('dashboard')->with('message', 'Comment created successfully!');
     }
 }

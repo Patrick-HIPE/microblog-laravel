@@ -60,7 +60,7 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
             <div className="p-6">
                 <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
 
-                    {/* Profile Header */}
+                    {/* Profile */}
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             {user.avatar_url ? (
@@ -80,7 +80,7 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
                             </div>
                         </div>
 
-                        {/* Followers / Following Buttons */}
+                        {/* Followers / Followings */}
                         <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
                             <Button
                                 onClick={() => router.get(route('profile.followers', { user: user.id }))}
@@ -109,9 +109,9 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
                         </div>
                     </div>
 
-                    <hr className="my-6" />
+                    <hr className="my-1" />
 
-                    {/* User Posts */}
+                    {/* Posts */}
                     <h3 className="text-lg font-semibold mb-4">Posts</h3>
 
                     {posts.length ? (
