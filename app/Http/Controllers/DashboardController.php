@@ -11,10 +11,12 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $posts = Post::with([
-                'user', 
-                'comments.user'
-            ])
+        $user = Auth::user();
+        $followingIds = $user->following()->pluck('users.id');
+        $allowedUserIds = $followingIds->push($user->id);
+
+        $posts = Post::whereIn('user_id', $allowedUserIds)
+            ->with(['user', 'comments.user'])
             ->withCount(['likes', 'comments'])
             ->with(['likes' => function ($query) {
                 $query->where('user_id', Auth::id());
