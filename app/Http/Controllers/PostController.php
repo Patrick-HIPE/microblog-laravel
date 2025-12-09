@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Post;
 use App\Models\Like;
+use App\Models\Comment;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Requests\StoreCommentRequest;
@@ -157,5 +158,36 @@ class PostController extends Controller
         ]);
 
         return redirect()->route('dashboard')->with('message', 'Comment created successfully!');
+    }
+
+    public function updateComment(Request $request, Comment $comment)
+    {
+        if ($comment->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'body' => 'required|string|max:1000',
+        ]);
+
+        $comment->update([
+            'body' => $request->body,
+        ]);
+
+        return back()->with('message', 'Comment updated successfully!');
+    }
+
+    /**
+     * Remove the specified comment.
+     */
+    public function deleteComment(Comment $comment)
+    {
+        if ($comment->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $comment->delete();
+
+        return back()->with('message', 'Comment deleted successfully!');
     }
 }
