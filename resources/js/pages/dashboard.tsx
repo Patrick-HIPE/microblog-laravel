@@ -2,7 +2,7 @@ import { PlaceholderPattern } from '../components/ui/placeholder-pattern';
 import AppLayout from '../layouts/app-layout';
 import { dashboard } from '../routes';
 import { type BreadcrumbItem } from '../types';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { Heart, MessageCircle, X, User, Repeat2 } from 'lucide-react';
 import { useState } from 'react';
@@ -40,11 +40,12 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ posts = [] }: DashboardProps) {
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-    const [commentContent, setCommentContent] = useState('');
-    const [processing, setProcessing] = useState(false);
+
+    const { data, setData, post, processing, reset, clearErrors } = useForm({
+        body: '',
+    });
 
     const handlePostClick = (postId: number) => {
         router.get(route('posts.show', postId));
@@ -58,52 +59,47 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
     };
 
     const openCommentModal = (e: React.MouseEvent, post: Post) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         setSelectedPost(post);
-        setCommentContent('');
+        reset();
+        clearErrors();
         setIsModalOpen(true);
     };
 
     const closeCommentModal = () => {
         setIsModalOpen(false);
         setSelectedPost(null);
-        setCommentContent('');
+        reset();
     };
 
     const submitComment = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedPost) return;
 
-        setProcessing(true);
-
-        const tempComment = {
-            id: Math.random(),
-            body: commentContent,
-            created_at: new Date().toISOString(),
-            user: {
-                id: 1, 
-                name: 'You', 
-            }
-        };
-
-        setSelectedPost({
-            ...selectedPost,
-            comments: selectedPost.comments ? [...selectedPost.comments, tempComment] : [tempComment],
-            comments_count: (selectedPost.comments_count ?? 0) + 1,
-        });
-
-        setCommentContent('');
-
-        router.post(route('posts.comments.store', selectedPost.id), {
-            body: tempComment.body
-        }, {
+        post(route('posts.comments.store', selectedPost.id), {
             preserveScroll: true,
-            onFinish: () => {
-                setProcessing(false);
-            }
+            onStart: () => {
+                const tempComment = {
+                    id: Math.random(),
+                    body: data.body,
+                    created_at: new Date().toISOString(),
+                    user: {
+                        id: 1,
+                        name: 'You',
+                    }
+                };
+
+                setSelectedPost((prev) => prev ? ({
+                    ...prev,
+                    comments: prev.comments ? [...prev.comments, tempComment] : [tempComment],
+                    comments_count: (prev.comments_count ?? 0) + 1,
+                }) : null);
+            },
+            onSuccess: () => {
+                reset();
+            },
         });
     };
-
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -239,7 +235,7 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
                             )}
                         </div>
 
-                        {/* Input Form */}
+                        {/* Form */}
                         <form onSubmit={submitComment} className="border-t border-neutral-200 p-4 sm:p-5 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-b-xl">
                             <div className="mb-4">
                                 <label htmlFor="comment" className="mb-2 block text-xs font-medium text-neutral-500">
@@ -248,8 +244,8 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
                                 <textarea
                                     id="comment"
                                     rows={3}
-                                    value={commentContent}
-                                    onChange={(e) => setCommentContent(e.target.value)}
+                                    value={data.body}
+                                    onChange={(e) => setData('body', e.target.value)}
                                     placeholder="Write your thoughts..."
                                     className="w-full resize-none rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm focus:border-black focus:ring-black dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:focus:border-white dark:focus:ring-white"
                                     required
@@ -266,7 +262,7 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={processing || !commentContent.trim()}
+                                    disabled={processing || !data.body.trim()}
                                     className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-200 cursor-pointer"
                                 >
                                     {processing ? 'Posting...' : 'Post Comment'}
