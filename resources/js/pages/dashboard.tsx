@@ -86,7 +86,7 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
         reset();
         clearErrors();
         setEditingCommentId(null);
-        setOpenMenuId(null); // Reset menus
+        setOpenMenuId(null);
         editCommentForm.reset();
         setIsModalOpen(true);
     };
@@ -99,7 +99,6 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
         setOpenMenuId(null);
     };
 
-    // --- Create Comment ---
     const submitComment = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedPost) return;
@@ -126,17 +125,15 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
         });
     };
 
-    // --- Menu Logic ---
     const toggleCommentMenu = (e: React.MouseEvent, commentId: number) => {
         e.stopPropagation();
         setOpenMenuId(openMenuId === commentId ? null : commentId);
     };
 
-    // --- Edit Comment Logic ---
     const startEditing = (comment: Comment) => {
         setEditingCommentId(comment.id);
         editCommentForm.setData('body', comment.body);
-        setOpenMenuId(null); // Close menu
+        setOpenMenuId(null);
     };
 
     const cancelEditing = () => {
@@ -147,7 +144,7 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
     const submitEditComment = (e: React.FormEvent, commentId: number) => {
         e.preventDefault();
         
-        editCommentForm.put(route('post.comments.update', commentId), {
+        editCommentForm.put(route('posts.comments.update', commentId), {
             preserveScroll: true,
             onSuccess: () => {
                 setEditingCommentId(null);
@@ -164,12 +161,11 @@ export default function Dashboard({ posts = [] }: DashboardProps) {
         });
     };
 
-    // --- Delete Comment Logic ---
     const deleteComment = (commentId: number) => {
-        setOpenMenuId(null); // Close menu immediately
+        setOpenMenuId(null);
         if (!confirm('Are you sure you want to delete this comment?')) return;
 
-        router.delete(route('post.comments.destroy', commentId), {
+        router.delete(route('posts.comments.destroy', commentId), {
             preserveScroll: true,
             onSuccess: () => {
                 setSelectedPost((prev) => {

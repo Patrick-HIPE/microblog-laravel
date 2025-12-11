@@ -147,47 +147,4 @@ class PostController extends Controller
 
         return back();
     }
-
-    public function comment(StoreCommentRequest $request, Post $post) 
-    {
-        $data = $request->validated();
-
-        $post->comments()->create([
-            'user_id' => $request->user()->id,
-            'body' => $data['body'],
-        ]);
-
-        return redirect()->route('dashboard')->with('message', 'Comment created successfully!');
-    }
-
-    public function updateComment(Request $request, Comment $comment)
-    {
-        if ($comment->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $request->validate([
-            'body' => 'required|string|max:1000',
-        ]);
-
-        $comment->update([
-            'body' => $request->body,
-        ]);
-
-        return back()->with('message', 'Comment updated successfully!');
-    }
-
-    /**
-     * Remove the specified comment.
-     */
-    public function deleteComment(Comment $comment)
-    {
-        if ($comment->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $comment->delete();
-
-        return back()->with('message', 'Comment deleted successfully!');
-    }
 }
