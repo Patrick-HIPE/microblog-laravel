@@ -39,5 +39,31 @@ export interface User {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    [key: string]: unknown;
+}
+
+export interface User {
+    id: number;
+    name: string;
+    avatar?: string;
+}
+
+export interface Comment {
+    id: number;
+    body: string;
+    created_at: string;
+    user: User;
+}
+
+export interface Post {
+    id: number;
+    content: string;
+    image_url: string | null;
+    created_at: string;
+    updated_at: string;
+    likes_count: number;
+    comments_count?: number;
+    shares_count?: number;
+    liked_by_user: boolean;
+    comments?: Comment[];
 }
