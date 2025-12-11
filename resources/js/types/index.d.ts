@@ -55,6 +55,12 @@ export interface Comment {
     user: User;
 }
 
+export interface PostUser {
+  id: number;
+  name: string;
+  avatar?: string | null;
+}
+
 export interface Post {
     id: number;
     content: string;
@@ -66,4 +72,5 @@ export interface Post {
     shares_count?: number;
     liked_by_user: boolean;
     comments?: Comment[];
+    user?: PostUser;
 }

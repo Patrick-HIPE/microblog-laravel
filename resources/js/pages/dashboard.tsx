@@ -5,7 +5,7 @@ import { dashboard } from '../routes';
 import { Post, BreadcrumbItem } from '../types'; 
 import { Head, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
-import { Heart, MessageCircle, MoreHorizontal, Share2 } from 'lucide-react'; // Removed ThumbsUp
+import { Heart, MessageCircle, MoreHorizontal, Share2, User } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -97,10 +97,13 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
                                 >
                                     <div className="flex items-center justify-between px-4 pt-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-700" />
+                                            <div className="h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
+                                                <User className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                                            </div>
+
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-semibold text-neutral-900 dark:text-white">
-                                                    User Name
+                                                    {post.user?.name || 'Unknown User'}
                                                 </span>
                                                 <span className="text-xs text-neutral-500">
                                                     {new Date(post.created_at).toLocaleDateString(undefined, {
