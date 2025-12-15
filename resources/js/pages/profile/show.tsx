@@ -159,6 +159,7 @@ export default function Show({
 
                         <div className="flex flex-wrap gap-2">
                             <Button
+                                className="cursor-pointer"
                                 onClick={() =>
                                     router.get(
                                         route("profile.followers", {
@@ -171,6 +172,7 @@ export default function Show({
                             </Button>
 
                             <Button
+                                className="cursor-pointer"
                                 onClick={() =>
                                     router.get(
                                         route("profile.following", {

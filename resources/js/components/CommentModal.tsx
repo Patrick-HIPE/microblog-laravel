@@ -1,4 +1,3 @@
-// components/CommentModal.tsx
 import { useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { X, User, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
@@ -111,6 +110,7 @@ export default function CommentModal({
                 };
                 
                 onPostUpdate(updatedPost);
+                onClose();
             }
         });
     };
@@ -131,6 +131,7 @@ export default function CommentModal({
                 };
 
                 onPostUpdate(updatedPost);
+                onClose();
             }
         });
     };
@@ -180,7 +181,7 @@ export default function CommentModal({
                                                 <button
                                                     type="submit"
                                                     disabled={editCommentForm.processing}
-                                                    className="text-xs bg-black text-white px-3 py-1 rounded hover:bg-neutral-800 dark:bg-white dark:text-black"
+                                                    className="text-xs bg-black text-white px-3 py-1 rounded hover:bg-neutral-800 dark:bg-white dark:text-black cursor-pointer"
                                                 >
                                                     Save
                                                 </button>

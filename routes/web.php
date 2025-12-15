@@ -26,8 +26,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.toggle-like');
     // Comment routes
     Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
-    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('post.comments.update');
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('post.comments.destroy');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('posts.comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('posts.comments.destroy');
     // Profile routes 
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/users/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])->name('users.toggle-follow');

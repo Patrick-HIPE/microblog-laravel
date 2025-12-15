@@ -7,9 +7,12 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreCommentRequest;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CommentController extends Controller
 {
+    use AuthorizesRequests; // <-- correct usage
+
     public function store(StoreCommentRequest $request, Post $post)
     {
         $data = $request->validated();
