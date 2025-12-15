@@ -62,6 +62,37 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
         });
     };
 
+    const handleShare = (postId: number) => {
+        setPosts((currentPosts) =>
+            currentPosts.map((post) => {
+                if (post.id === postId) {
+                    const isNowShared = !post.shared_by_user;
+                    
+                    return {
+                        ...post,
+                        // 2. Update the boolean
+                        shared_by_user: isNowShared,
+                        // 3. Update the count
+                        shares_count: isNowShared 
+                            ? (post.shares_count || 0) + 1 
+                            : (post.shares_count || 0) - 1
+                    };
+                }
+                return post;
+            })
+        );
+
+        // 4. Send request to server
+        router.post(route('posts.share', postId), {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: () => {
+                console.error("Failed to share post");
+                // Optional: Revert state here if you want strict error handling
+            }
+        });
+    };
+
     const openCommentModal = (post: PostType) => {
         setSelectedPost(post);
         setIsModalOpen(true);
@@ -97,6 +128,7 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
                                     onLike={handleLike}
                                     onComment={openCommentModal}
                                     onClick={handlePostClick}
+                                    onShare={handleShare}
                                 />
                             ))}
                         </div>

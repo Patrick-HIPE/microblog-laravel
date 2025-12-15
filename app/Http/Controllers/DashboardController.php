@@ -17,8 +17,11 @@ class DashboardController extends Controller
 
         $posts = Post::whereIn('user_id', $allowedUserIds)
             ->with(['user', 'comments.user'])
-            ->withCount(['likes', 'comments'])
+            ->withCount(['likes', 'comments', 'shares']) 
             ->with(['likes' => function ($query) {
+                $query->where('user_id', Auth::id());
+            }])
+            ->with(['shares' => function ($query) {
                 $query->where('user_id', Auth::id());
             }])
             ->latest()
@@ -26,7 +29,10 @@ class DashboardController extends Controller
 
         $posts->getCollection()->transform(function ($post) {
             $post->image_url = $post->image ? Storage::url($post->image) : null;
+            
             $post->liked_by_user = $post->likes->isNotEmpty();
+            $post->shared_by_user = $post->shares->isNotEmpty();
+            
             return $post;
         });
 

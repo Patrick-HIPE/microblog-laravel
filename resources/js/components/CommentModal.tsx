@@ -210,7 +210,7 @@ export default function CommentModal({
                                                         onClick={(e) => toggleCommentMenu(e, comment.id)}
                                                         className="absolute bottom-2 right-2 rounded-full p-1 text-neutral-400 hover:bg-neutral-200 hover:text-neutral-600 dark:hover:bg-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300 transition-colors"
                                                     >
-                                                        <MoreHorizontal className="h-4 w-4" />
+                                                        <MoreHorizontal className="h-4 w-4 cursor-pointer" />
                                                     </button>
 
                                                     {openMenuId === comment.id && (

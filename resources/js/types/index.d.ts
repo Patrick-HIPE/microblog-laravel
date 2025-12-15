@@ -71,6 +71,7 @@ export interface Post {
     comments_count?: number;
     shares_count?: number;
     liked_by_user: boolean;
+    shared_by_user: boolean;
     comments?: Comment[];
     user?: PostUser;
 }

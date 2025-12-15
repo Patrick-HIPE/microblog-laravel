@@ -6,9 +6,9 @@ use Inertia\Inertia;
 use App\Models\Post;
 use App\Models\Like;
 use App\Models\Comment;
+use App\Models\Share;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
-use App\Http\Requests\StoreCommentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -25,10 +25,10 @@ class PostController extends Controller
         $posts = Post::with([
                 'user:id,name',
                 'likes',
+                'shares', 
                 'comments.user:id,name'
             ])
-            ->where('user_id', $currentUser->id)
-            ->latest()
+            ->latest() 
             ->get()
             ->map(function ($post) use ($currentUser) {
                 return [
@@ -37,9 +37,16 @@ class PostController extends Controller
                     'image_url' => $post->image ? Storage::url($post->image) : null,
                     'created_at' => $post->created_at,
                     'updated_at' => $post->updated_at,
+                    
+                    // LIKES
                     'likes_count' => $post->likes->count(),
-                    'comments_count' => $post->comments->count(),
                     'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
+                    
+                    // SHARES
+                    'shares_count' => $post->shares->count(),
+                    'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
+
+                    'comments_count' => $post->comments->count(),
                     'user' => [
                         'id' => $post->user->id,
                         'name' => $post->user->name,
@@ -65,7 +72,6 @@ class PostController extends Controller
             'current_user_id' => $currentUser?->id,
         ]);
     }
-
 
     /**
      * Show the form for creating a new post.
@@ -102,6 +108,7 @@ class PostController extends Controller
         $post->load([
             'user:id,name',
             'likes',
+            'shares',
             'comments.user:id,name'
         ]);
 
@@ -111,9 +118,16 @@ class PostController extends Controller
             'image_url' => $post->image ? Storage::url($post->image) : null,
             'created_at' => $post->created_at,
             'updated_at' => $post->updated_at,
+            
+            // LIKES
             'likes_count' => $post->likes->count(),
-            'comments_count' => $post->comments->count(),
             'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
+
+            // SHARES
+            'shares_count' => $post->shares->count(),
+            'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
+
+            'comments_count' => $post->comments->count(),
             'user' => [
                 'id' => $post->user->id,
                 'name' => $post->user->name,
@@ -193,6 +207,9 @@ class PostController extends Controller
         return redirect()->route('posts.index')->with('message', 'Post deleted successfully!');
     }
 
+    /**
+     * Toggle Like
+     */
     public function like(Post $post)
     {
         $user = Auth::user();
@@ -214,6 +231,37 @@ class PostController extends Controller
                 'post_id' => $post->id,
             ]);
             $message = 'You liked the post.';
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Toggle Share
+     */
+    public function share(Post $post)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403, 'You must be logged in to share a post.');
+        }
+
+        // Check for existing share
+        $existingShare = $post->shares()
+                              ->where('user_id', $user->id)
+                              ->first();
+
+        if ($existingShare) {
+            // Unshare
+            $existingShare->delete();
+            $message = 'You unshared the post.';
+        } else {
+            // Share
+            $post->shares()->create([
+                'user_id' => $user->id,
+            ]);
+            $message = 'You shared the post.';
         }
 
         return back()->with('success', $message);

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Post;
+use App\Models\Share;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -91,5 +92,20 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasLiked(Post $post): bool
     {
         return $this->likes()->where('post_id', $post->id)->exists();
+    }
+
+    public function shares()
+    {
+        return $this->hasMany(Share::class);
+    }
+
+    public function sharedPosts()
+    {
+        return $this->belongsToMany(Post::class, 'shares')->withTimestamps();
+    }
+
+    public function hasShared(Post $post): bool
+    {
+        return $this->shares()->where('post_id', $post->id)->exists();
     }
 }

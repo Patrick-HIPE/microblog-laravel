@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Share;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -27,5 +28,10 @@ class Post extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function shares()
+    {
+        return $this->hasMany(Share::class);
     }
 }

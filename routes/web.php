@@ -17,18 +17,21 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard route
+    // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    // Search route
+    // Search
     Route::get('/global-search', SearchController::class)->name('global.search');
-    // Post routes
+    // Post
     Route::resource('posts', PostController::class);
+    // Like
     Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.toggle-like');
-    // Comment routes
+    // Comment
     Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('posts.comments.update');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('posts.comments.destroy');
-    // Profile routes 
+    // Share
+    Route::post('/posts/{post}/share', [PostController::class, 'share'])->name('posts.share');
+    // Profile
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/users/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])->name('users.toggle-follow');
     Route::get('/profile/{user}/followers', [ProfileController::class, 'followers'])->name('profile.followers');
