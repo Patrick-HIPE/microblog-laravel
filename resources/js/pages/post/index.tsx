@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import FlashMessage from '@/components/flash-message';
+import CommentModal from '@/components/CommentModal';
 import Post from '@/components/Post';
 import { useState } from 'react';
 
@@ -28,6 +29,9 @@ export default function Index({ posts: initialPosts }: Props) {
         }))
     );
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
+
     const handleDelete = (postId: number) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
 
@@ -37,31 +41,58 @@ export default function Index({ posts: initialPosts }: Props) {
     };
 
     const handleLike = (postId: number) => {
-        setPosts((currentPosts) =>
+        setPosts((currentPosts) => 
             currentPosts.map((post) => {
                 if (post.id === postId) {
                     const isNowLiked = !post.liked_by_user;
                     return {
                         ...post,
                         liked_by_user: isNowLiked,
-                        likes_count: isNowLiked
-                            ? post.likes_count + 1
-                            : post.likes_count - 1,
+                        likes_count: isNowLiked 
+                            ? (post.likes_count || 0) + 1 
+                            : (post.likes_count || 0) - 1
                     };
                 }
                 return post;
             })
         );
 
-        router.post(route('posts.like', { post: postId }), {}, { preserveScroll: true });
-    };
-
-    const handleComment = (post: PostType) => {
-        console.log('Comment on post', post.id);
+        router.post(route('posts.toggle-like', postId), {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: () => console.error("Failed to like post")
+        });
     };
 
     const handlePostClick = (postId: number) => {
         router.get(route('posts.show', postId));
+    };
+
+    const openCommentModal = (post: PostType) => {
+        setSelectedPost(post);
+        setIsModalOpen(true);
+    };
+
+    const closeCommentModal = () => {
+        setIsModalOpen(false);
+        setSelectedPost(null);
+    };
+
+    const handlePostUpdate = (updatedPost: PostType) => {
+        const normalizedPost = {
+            ...updatedPost,
+            likes_count: updatedPost.likes_count ?? 0,
+            comments_count: updatedPost.comments_count ?? 0,
+            shares_count: updatedPost.shares_count ?? 0,
+            liked_by_user: updatedPost.liked_by_user ?? false,
+            user: updatedPost.user ?? { id: 0, name: 'Unknown User' },
+        };
+
+        setSelectedPost(normalizedPost);
+
+        setPosts((prevPosts) =>
+            prevPosts.map((p) => (p.id === normalizedPost.id ? normalizedPost : p))
+        );
     };
 
     return (
@@ -86,7 +117,7 @@ export default function Index({ posts: initialPosts }: Props) {
                                     post={post}
                                     currentUserId={post.user.id}
                                     onLike={handleLike}
-                                    onComment={handleComment}
+                                    onComment={openCommentModal}
                                     onClick={handlePostClick}
                                 >
                                     <div className="flex justify-end mt-2">
@@ -119,6 +150,14 @@ export default function Index({ posts: initialPosts }: Props) {
                     )}
                 </div>
             </div>
+
+            <CommentModal
+                isOpen={isModalOpen}
+                onClose={closeCommentModal}
+                post={selectedPost}
+                currentUser={{ id: posts[0]?.user.id ?? 0, name: posts[0]?.user.name ?? 'User' }}
+                onPostUpdate={handlePostUpdate}
+            />
         </AppLayout>
     );
 }

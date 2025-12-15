@@ -19,7 +19,7 @@ class CommentController extends Controller
             'body' => $data['body'],
         ]);
 
-        return redirect()->route('dashboard')->with('message', 'Comment created successfully!');
+        return redirect()->back()->with('message', 'Comment created successfully!');
     }
 
     public function update(Request $request, Comment $comment)

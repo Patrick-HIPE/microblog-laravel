@@ -38,7 +38,7 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
         router.get(route('posts.show', postId));
     };
 
-    const toggleLike = (postId: number) => {
+    const handleLike = (postId: number) => {
         setPosts((currentPosts) => 
             currentPosts.map((post) => {
                 if (post.id === postId) {
@@ -94,7 +94,7 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
                                     key={post.id}
                                     post={post}
                                     currentUserId={auth.user.id}
-                                    onLike={toggleLike}
+                                    onLike={handleLike}
                                     onComment={openCommentModal}
                                     onClick={handlePostClick}
                                 />
