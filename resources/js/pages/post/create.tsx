@@ -61,11 +61,10 @@ export default function Create() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Post" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+                <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-10 md:min-h-min dark:border-sidebar-border">
                     <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">Create Post</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Content */}
                         <div className="space-y-2">
                             <Label htmlFor="content">Content</Label>
                             <Textarea

@@ -1,11 +1,11 @@
 import AppLayout from "@/layouts/app-layout";
 import { Head, router } from "@inertiajs/react";
-import { PlaceholderPattern } from "@/components/ui/placeholder-pattern";
 import { User as UserIcon } from "lucide-react";
-import { BreadcrumbItem } from "@/types";
+import { BreadcrumbItem, Post as PostType } from "@/types";
 import { useState } from "react";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
+import Post from "@/components/Post";
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Profile', href: '/profile' },
@@ -22,17 +22,9 @@ export interface User {
     following: { id: number }[];
 }
 
-export interface Post {
-    id: number;
-    content: string;
-    image: string | null;
-    created_at: string;
-    updated_at: string;
-}
-
 interface Props {
     user: User;
-    posts: Post[];
+    posts: PostType[];
     current_user_id: number | null;
     user_is_followed: boolean;
 }
@@ -53,6 +45,14 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
         router.get(route('posts.show', postId));
     };
 
+    const handleLike = (postId: number) => {
+            console.log('Like post', postId);
+    };
+
+    const handleComment = (post: PostType) => {
+        console.log('Comment on post', post.id);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={user.name} />
@@ -60,7 +60,6 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
             <div className="p-6">
                 <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
 
-                    {/* Profile */}
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             {user.avatar_url ? (
@@ -80,7 +79,7 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
                             </div>
                         </div>
 
-                        {/* Followers / Followings */}
+                        {/* Followers / Followings / Follow Button */}
                         <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
                             <Button
                                 onClick={() => router.get(route('profile.followers', { user: user.id }))}
@@ -111,43 +110,27 @@ export default function Show({ user, posts, current_user_id, user_is_followed }:
 
                     <hr className="my-1" />
 
-                    {/* Posts */}
+                    {/* Posts Section */}
                     <h3 className="text-lg font-semibold mb-4">Posts</h3>
 
                     {posts.length ? (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {posts.map((post) => (
-                                <div
+                                <Post
                                     key={post.id}
-                                    className="cursor-pointer overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-800 hover:shadow-lg transition-shadow"
-                                    onClick={() => handlePostClick(post.id)}
-                                >
-                                    {post.image ? (
-                                        <div className="aspect-video w-full overflow-hidden">
-                                            <img
-                                                src={`/storage/${post.image}`}
-                                                alt="Post image"
-                                                className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="relative aspect-video w-full bg-neutral-100 dark:bg-neutral-900">
-                                            <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/10 dark:stroke-neutral-100/10" />
-                                        </div>
-                                    )}
-
-                                    <div className="p-4">
-                                        <h3 className="mb-2 truncate text-lg font-bold text-neutral-900 dark:text-white">
-                                            {post.content.slice(0, 50)}
-                                        </h3>
-                                        <p className="mb-4 line-clamp-3 text-sm text-neutral-600 dark:text-neutral-400">
-                                            {post.content}
-                                        </p>
-                                        <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-500">
-                                            <span>{new Date(post.created_at).toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                    post={{
+                                        ...post,
+                                        likes_count: post.likes_count ?? 0,
+                                        comments_count: post.comments_count ?? 0,
+                                        shares_count: post.shares_count ?? 0,
+                                        liked_by_user: post.liked_by_user ?? false,
+                                        user: post.user ?? { id: 0, name: 'Unknown User' },
+                                    }}
+                                    currentUserId={current_user_id ?? 0}
+                                    onClick={handlePostClick}
+                                    onLike={handleLike}
+                                    onComment={handleComment}
+                                />
                             ))}
                         </div>
                     ) : (

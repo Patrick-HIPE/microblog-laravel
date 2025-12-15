@@ -7,6 +7,7 @@ import { route } from 'ziggy-js';
 import { useState } from 'react';
 import Post from '@/components/Post';
 import { Heart } from 'lucide-react';
+import FlashMessage from '@/components/flash-message';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Home', href: dashboard().url },
@@ -81,7 +82,8 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
-
+            <FlashMessage />
+            
             <div className="flex flex-1 flex-col items-center bg-neutral-100 p-4 dark:bg-black/10">
                 <div className="w-full max-w-[680px] space-y-4">
 

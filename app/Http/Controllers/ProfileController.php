@@ -19,9 +19,30 @@ class ProfileController extends Controller
             ? $currentUser->following()->where('user_id', $user->id)->exists()
             : false;
 
+        $posts = $user->posts()
+            ->with('user')
+            ->latest()
+            ->get()
+            ->map(function ($post) use ($currentUser) {
+                return [
+                    'id' => $post->id,
+                    'content' => $post->content,
+                    'image_url' => $post->image ? '/storage/' . $post->image : null,
+                    'created_at' => $post->created_at,
+                    'updated_at' => $post->updated_at,
+                    'likes_count' => $post->likes()->count(),
+                    'comments_count' => $post->comments()->count(),
+                    'liked_by_user' => $currentUser ? $post->likes()->where('user_id', $currentUser->id)->exists() : false,
+                    'user' => [
+                        'id' => $post->user->id,
+                        'name' => $post->user->name,
+                    ],
+                ];
+            });
+
         return inertia('profile/show', [
             'user' => $user->load('followers', 'following'),
-            'posts' => $user->posts()->latest()->get(),
+            'posts' => $posts,
             'current_user_id' => $currentUser?->id,
             'user_is_followed' => $isFollowed,
         ]);

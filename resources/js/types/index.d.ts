@@ -64,7 +64,7 @@ export interface PostUser {
 export interface Post {
     id: number;
     content: string;
-    image_url: string | null;
+    image_url?: string;
     created_at: string;
     updated_at: string;
     likes_count: number;

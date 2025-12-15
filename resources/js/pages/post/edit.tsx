@@ -72,9 +72,8 @@ export default function Update({ post }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Edit Post" />
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+        <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-10 md:min-h-min dark:border-sidebar-border">
           
-          {/* Header Section: Title Left, Delete Button Right */}
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
                 Edit Post

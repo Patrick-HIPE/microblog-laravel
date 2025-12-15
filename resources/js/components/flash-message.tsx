@@ -30,7 +30,7 @@ export default function FlashMessage() {
     const content = flash.error || flash.success || flash.message;
 
     return (
-        <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm animate-in slide-in-from-bottom-5 fade-in-0 duration-300">
+        <div className="fixed top-4 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 animate-in slide-in-from-top-5 fade-in-0 duration-300">
             <div className={`
                 relative flex w-full items-start gap-3 rounded-xl border p-4 shadow-lg backdrop-blur-sm
                 ${isError 

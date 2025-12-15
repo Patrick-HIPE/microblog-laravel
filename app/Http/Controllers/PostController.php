@@ -20,18 +20,52 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::where('user_id', Auth::id())
+        $currentUser = Auth::user();
+
+        $posts = Post::with([
+                'user:id,name',
+                'likes',
+                'comments.user:id,name'
+            ])
+            ->where('user_id', $currentUser->id)
             ->latest()
             ->get()
-            ->map(function ($post) {
-                $post->image_url = $post->image ? Storage::url($post->image) : null;
-                return $post;
+            ->map(function ($post) use ($currentUser) {
+                return [
+                    'id' => $post->id,
+                    'content' => $post->content,
+                    'image_url' => $post->image ? Storage::url($post->image) : null,
+                    'created_at' => $post->created_at,
+                    'updated_at' => $post->updated_at,
+                    'likes_count' => $post->likes->count(),
+                    'comments_count' => $post->comments->count(),
+                    'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
+                    'user' => [
+                        'id' => $post->user->id,
+                        'name' => $post->user->name,
+                        'avatar' => $post->user->avatar ?? null,
+                    ],
+                    'comments' => $post->comments->map(function ($comment) {
+                        return [
+                            'id' => $comment->id,
+                            'body' => $comment->body,
+                            'created_at' => $comment->created_at,
+                            'user' => [
+                                'id' => $comment->user->id,
+                                'name' => $comment->user->name,
+                                'avatar' => $comment->user->avatar ?? null,
+                            ],
+                        ];
+                    }),
+                ];
             });
 
         return Inertia::render('post/index', [
             'posts' => $posts,
+            'current_user_id' => $currentUser?->id,
         ]);
     }
+
 
     /**
      * Show the form for creating a new post.
@@ -63,10 +97,45 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        $post->image_url = $post->image ? Storage::url($post->image) : null;
+        $currentUser = Auth::user();
+
+        $post->load([
+            'user:id,name',
+            'likes',
+            'comments.user:id,name'
+        ]);
+
+        $data = [
+            'id' => $post->id,
+            'content' => $post->content,
+            'image_url' => $post->image ? Storage::url($post->image) : null,
+            'created_at' => $post->created_at,
+            'updated_at' => $post->updated_at,
+            'likes_count' => $post->likes->count(),
+            'comments_count' => $post->comments->count(),
+            'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
+            'user' => [
+                'id' => $post->user->id,
+                'name' => $post->user->name,
+                'avatar' => $post->user->avatar ?? null,
+            ],
+            'comments' => $post->comments->map(function ($comment) {
+                return [
+                    'id' => $comment->id,
+                    'body' => $comment->body,
+                    'created_at' => $comment->created_at,
+                    'user' => [
+                        'id' => $comment->user->id,
+                        'name' => $comment->user->name,
+                        'avatar' => $comment->user->avatar ?? null,
+                    ],
+                ];
+            }),
+        ];
 
         return Inertia::render('post/show', [
-            'post' => $post,
+            'post' => $data,
+            'current_user_id' => $currentUser?->id,
         ]);
     }
 
@@ -138,13 +207,15 @@ class PostController extends Controller
 
         if ($like) {
             $like->delete();
+            $message = 'You unliked the post.';
         } else {
             Like::create([
                 'user_id' => $user->id,
                 'post_id' => $post->id,
             ]);
+            $message = 'You liked the post.';
         }
 
-        return back();
+        return back()->with('success', $message);
     }
 }
