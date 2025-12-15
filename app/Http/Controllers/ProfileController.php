@@ -25,7 +25,8 @@ class ProfileController extends Controller
             ->with([
                 'user:id,name',
                 'likes',
-                'comments.user:id,name'
+                'comments.user:id,name',
+                'shares'
             ])
             ->latest()
             ->get()
@@ -38,7 +39,9 @@ class ProfileController extends Controller
                     'updated_at' => $post->updated_at,
                     'likes_count' => $post->likes->count(),
                     'comments_count' => $post->comments->count(),
+                    'shares_count' => $post->shares->count(),
                     'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
+                    'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
                     'user' => [
                         'id' => $post->user->id,
                         'name' => $post->user->name,

@@ -95,6 +95,33 @@ export default function Index({ posts: initialPosts }: Props) {
         );
     };
 
+    const handleShare = (postId: number) => {
+        setPosts((currentPosts) =>
+            currentPosts.map((post) => {
+                if (post.id === postId) {
+                    const isNowShared = !post.shared_by_user;
+                    
+                    return {
+                        ...post,
+                        shared_by_user: isNowShared,
+                        shares_count: isNowShared 
+                            ? (post.shares_count || 0) + 1 
+                            : (post.shares_count || 0) - 1
+                    };
+                }
+                return post;
+            })
+        );
+
+        router.post(route('posts.share', postId), {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: () => {
+                console.error("Failed to share post");
+            }
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="My Posts" />
@@ -116,9 +143,10 @@ export default function Index({ posts: initialPosts }: Props) {
                                     key={post.id}
                                     post={post}
                                     currentUserId={post.user.id}
+                                    onClick={handlePostClick}
                                     onLike={handleLike}
                                     onComment={openCommentModal}
-                                    onClick={handlePostClick}
+                                    onShare={handleShare}
                                 >
                                     <div className="flex justify-end mt-2">
                                         <button

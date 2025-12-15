@@ -125,6 +125,32 @@ export default function Show({
         );
     };
 
+    const handleShare = (postId: number) => {
+        setPosts((currentPosts) =>
+            currentPosts.map((post) => {
+                if (post.id === postId) {
+                    const isNowShared = !post.shared_by_user;
+                    
+                    return {
+                        ...post,
+                        shared_by_user: isNowShared,
+                        shares_count: isNowShared 
+                            ? (post.shares_count || 0) + 1 
+                            : (post.shares_count || 0) - 1
+                    };
+                }
+                return post;
+            })
+        );
+
+        router.post(route('posts.share', postId), {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: () => {
+                console.error("Failed to share post");
+            }
+        });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -213,6 +239,7 @@ export default function Show({
                                     onClick={handlePostClick}
                                     onLike={handleLike}
                                     onComment={openCommentModal}
+                                    onShare={handleShare}
                                 />
                             ))}
                         </div>

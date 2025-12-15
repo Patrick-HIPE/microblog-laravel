@@ -70,9 +70,7 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
                     
                     return {
                         ...post,
-                        // 2. Update the boolean
                         shared_by_user: isNowShared,
-                        // 3. Update the count
                         shares_count: isNowShared 
                             ? (post.shares_count || 0) + 1 
                             : (post.shares_count || 0) - 1
@@ -82,13 +80,11 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
             })
         );
 
-        // 4. Send request to server
         router.post(route('posts.share', postId), {}, {
             preserveScroll: true,
             preserveState: true,
             onError: () => {
                 console.error("Failed to share post");
-                // Optional: Revert state here if you want strict error handling
             }
         });
     };
@@ -125,10 +121,11 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
                                     key={post.id}
                                     post={post}
                                     currentUserId={auth.user.id}
+                                    onClick={handlePostClick}
                                     onLike={handleLike}
                                     onComment={openCommentModal}
-                                    onClick={handlePostClick}
                                     onShare={handleShare}
+                                    
                                 />
                             ))}
                         </div>
