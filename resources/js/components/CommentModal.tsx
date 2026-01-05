@@ -1,7 +1,7 @@
 import { useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { X, User, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Post, Comment, User as UserType } from '@/types';
 
 interface CommentModalProps {
@@ -25,6 +25,7 @@ export default function CommentModal({
 }: CommentModalProps) {
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const { data, setData, post: submitCreate, processing, reset, clearErrors } = useForm({
         body: '',
@@ -33,6 +34,23 @@ export default function CommentModal({
     const editCommentForm = useForm({
         body: '',
     });
+
+    // Handle closing menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (openMenuId !== null && menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpenMenuId(null);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [openMenuId, isOpen]);
 
     useEffect(() => {
         if (isOpen) {
@@ -64,7 +82,6 @@ export default function CommentModal({
 
     const submitComment = (e: React.FormEvent) => {
         e.preventDefault();
-        
         if (!activePost) return;
 
         submitCreate(route('posts.comments.store', activePost.id), {
@@ -87,7 +104,8 @@ export default function CommentModal({
             },
             onSuccess: () => {
                 reset();
-                onClose();
+                // Optional: Don't close modal immediately on comment success to encourage discussion
+                // onClose(); 
             },
         });
     };
@@ -99,7 +117,6 @@ export default function CommentModal({
             preserveScroll: true,
             onSuccess: () => {
                 setEditingCommentId(null);
-                
                 if (!activePost.comments) return;
 
                 const updatedPost = {
@@ -110,7 +127,6 @@ export default function CommentModal({
                 };
                 
                 onPostUpdate(updatedPost);
-                onClose();
             }
         });
     };
@@ -131,7 +147,6 @@ export default function CommentModal({
                 };
 
                 onPostUpdate(updatedPost);
-                onClose();
             }
         });
     };
@@ -157,128 +172,147 @@ export default function CommentModal({
                 </div>
 
                 {/* Comment List */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px]">
                     {activePost.comments && activePost.comments.length > 0 ? (
-                        activePost.comments.map((comment) => (
-                            <div key={comment.id} className="flex gap-3 group">
-                                <div className="flex-shrink-0">
-                                    <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center dark:bg-neutral-800">
-                                        <User className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                                    </div>
-                                </div>
-
-                                <div className="flex-1 relative">
-                                    {editingCommentId === comment.id ? (
-                                        <form onSubmit={(e) => submitEditComment(e, comment.id)} className="w-full">
-                                            <textarea
-                                                value={editCommentForm.data.body}
-                                                onChange={(e) => editCommentForm.setData('body', e.target.value)}
-                                                className="w-full resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-black focus:ring-black dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
-                                                rows={2}
-                                                autoFocus
-                                            />
-                                            <div className="flex gap-2 mt-2">
-                                                <button
-                                                    type="submit"
-                                                    disabled={editCommentForm.processing}
-                                                    className="text-xs bg-black text-white px-3 py-1 rounded hover:bg-neutral-800 dark:bg-white dark:text-black cursor-pointer"
-                                                >
-                                                    Save
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={cancelEditing}
-                                                    className="text-xs text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </form>
-                                    ) : (
-                                        <div className="relative rounded-lg bg-neutral-50 p-3 pb-6 dark:bg-neutral-800">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="text-sm font-semibold text-neutral-900 dark:text-white">
-                                                    {comment.user?.name || 'User'}
-                                                </span>
-                                                <span className="text-xs text-neutral-500">{new Date(comment.created_at).toLocaleString()}</span>
-                                            </div>
-                                            <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">{comment.body}</p>
-
-                                            {currentUser.id === comment.user.id && (
-                                                <>
-                                                    <button 
-                                                        onClick={(e) => toggleCommentMenu(e, comment.id)}
-                                                        className="absolute bottom-2 right-2 rounded-full p-1 text-neutral-400 hover:bg-neutral-200 hover:text-neutral-600 dark:hover:bg-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300 transition-colors"
-                                                    >
-                                                        <MoreHorizontal className="h-4 w-4 cursor-pointer" />
-                                                    </button>
-
-                                                    {openMenuId === comment.id && (
-                                                        <div className="absolute right-0 top-full mt-1 z-20 min-w-[120px] overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
-                                                            <div className="py-1">
-                                                                <button
-                                                                    onClick={() => startEditing(comment)}
-                                                                    className="flex w-full items-center gap-2 px-4 py-2 text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                                                                >
-                                                                    <Pencil className="h-3.5 w-3.5" />
-                                                                    Edit
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => deleteComment(comment.id)}
-                                                                    className="flex w-full items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                                                >
-                                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                                    Delete
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </>
+                        activePost.comments.map((comment, index) => {
+                            // Smart Positioning Logic: 
+                            // If it's one of the last 2 items, open upwards so it doesn't clip
+                            const isNearBottom = activePost.comments && index > activePost.comments.length - 2;
+                            
+                            return (
+                                <div key={comment.id} className="flex gap-3 group">
+                                    <div className="flex-shrink-0">
+                                        <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center dark:bg-neutral-800">
+                                            {comment.user.avatar ? (
+                                                <img src={comment.user.avatar} alt={comment.user.name} className="h-8 w-8 rounded-full object-cover" />
+                                            ) : (
+                                                <User className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
                                             )}
                                         </div>
-                                    )}
+                                    </div>
+
+                                    <div className="flex-1 relative">
+                                        {editingCommentId === comment.id ? (
+                                            <form onSubmit={(e) => submitEditComment(e, comment.id)} className="w-full animate-in fade-in duration-200">
+                                                <textarea
+                                                    value={editCommentForm.data.body}
+                                                    onChange={(e) => editCommentForm.setData('body', e.target.value)}
+                                                    className="w-full resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-black focus:ring-black dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
+                                                    rows={2}
+                                                    autoFocus
+                                                />
+                                                <div className="flex gap-2 mt-2">
+                                                    <button
+                                                        type="submit"
+                                                        disabled={editCommentForm.processing}
+                                                        className="text-sm bg-black text-white px-3 py-1.5 rounded-md hover:bg-neutral-800 dark:bg-white dark:text-black font-medium transition-colors cursor-pointer"
+                                                    >
+                                                        Save
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={cancelEditing}
+                                                        className="text-sm text-neutral-600 px-3 py-1.5 rounded-md hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        ) : (
+                                            <div className="relative rounded-lg bg-neutral-50 p-3 pb-6 dark:bg-neutral-800 group-hover:bg-neutral-100 dark:group-hover:bg-neutral-750 transition-colors cursor-pointer">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">
+                                                        {comment.user?.name || 'User'}
+                                                    </span>
+                                                    <span className="text-xs text-neutral-500">{new Date(comment.created_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                                </div>
+                                                <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">{comment.body}</p>
+
+                                                {currentUser.id === comment.user.id && (
+                                                    <div className="absolute bottom-2 right-2">
+                                                        <button 
+                                                            onClick={(e) => toggleCommentMenu(e, comment.id)}
+                                                            className={`rounded-full p-1.5 transition-colors ${
+                                                                openMenuId === comment.id 
+                                                                ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' 
+                                                                : 'text-neutral-400 hover:bg-neutral-200 hover:text-neutral-600 dark:hover:bg-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300'
+                                                            }`}
+                                                        >
+                                                            <MoreHorizontal className="h-4 w-4 cursor-pointer" />
+                                                        </button>
+
+                                                        {openMenuId === comment.id && (
+                                                            <div 
+                                                                ref={menuRef}
+                                                                className={`absolute right-0 z-30 min-w-[140px] overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl dark:border-neutral-700 dark:bg-neutral-900 animate-in fade-in zoom-in-95 duration-100 ${
+                                                                    isNearBottom ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right'
+                                                                }`}
+                                                            >
+                                                                <div className="p-1">
+                                                                    <button
+                                                                        onClick={() => startEditing(comment)}
+                                                                        className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-neutral-700 rounded-md hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => deleteComment(comment.id)}
+                                                                        className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 rounded-md hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
-                        <p className="text-center text-sm text-neutral-500 py-6">
-                            No comments yet. Be the first to share your thoughts!
-                        </p>
+                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                            <p className="text-sm text-neutral-500 mb-2">No comments yet.</p>
+                            <p className="text-xs text-neutral-400">Be the first to share your thoughts!</p>
+                        </div>
                     )}
                 </div>
 
                 {/* Create Form */}
-                <form onSubmit={submitComment} className="border-t border-neutral-200 p-4 sm:p-5 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-b-xl">
-                    <div className="mb-4">
-                        <label htmlFor="comment" className="mb-2 block text-xs font-medium text-neutral-500">
-                            Your Comment
-                        </label>
-                        <textarea
-                            id="comment"
-                            rows={3}
-                            value={data.body}
-                            onChange={(e) => setData('body', e.target.value)}
-                            placeholder="Write your thoughts..."
-                            className="w-full resize-none rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm focus:border-black focus:ring-black dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:focus:border-white dark:focus:ring-white"
-                            required
-                        />
-                    </div>
-                    
-                    <div className="flex justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="rounded-lg px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={processing || !data.body.trim()}
-                            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-200 cursor-pointer"
-                        >
-                            {processing ? 'Posting...' : 'Post Comment'}
-                        </button>
+                <form onSubmit={submitComment} className="border-t border-neutral-200 p-4 sm:p-5 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-b-xl z-20">
+                    <div className="flex gap-3">
+                        <div className="hidden sm:block flex-shrink-0">
+                             <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center dark:bg-neutral-800">
+                                <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">
+                                    {currentUser.name.charAt(0)}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex-1">
+                            <textarea
+                                rows={1}
+                                value={data.body}
+                                onChange={(e) => setData('body', e.target.value)}
+                                placeholder="Add a comment..."
+                                className="w-full resize-none rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2.5 text-sm focus:border-black focus:ring-black dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:focus:border-white dark:focus:ring-white min-h-[44px]"
+                                required
+                            />
+                            {data.body.trim().length > 0 && (
+                                <div className="mt-2 flex justify-end gap-2 animate-in fade-in slide-in-from-top-1">
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-200 transition-colors"
+                                    >
+                                        {processing ? 'Posting...' : 'Post'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </form>
             </div>
