@@ -14,9 +14,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface Props {
     posts: PostType[];
+    current_user_id: number;
 }
 
-export default function Index({ posts: initialPosts }: Props) {
+export default function Index({ posts: initialPosts, current_user_id }: Props) {
     const [posts, setPosts] = useState(
         initialPosts.map((p) => ({
             ...p,
@@ -142,26 +143,34 @@ export default function Index({ posts: initialPosts }: Props) {
                                 <Post
                                     key={post.id}
                                     post={post}
-                                    currentUserId={post.user.id}
+                                    currentUserId={current_user_id}
                                     onClick={handlePostClick}
                                     onLike={handleLike}
                                     onComment={openCommentModal}
                                     onShare={handleShare}
                                 >
-                                    <div className="flex justify-end mt-2">
-                                        <button
-                                            onClick={() => router.get(route('posts.edit', post.id))}
-                                            className="mr-2 text-blue-600 hover:underline text-sm"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(post.id)}
-                                            className="text-red-600 hover:underline text-sm"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
+                                    {post.user.id === current_user_id && (
+                                        <div className="flex justify-end mt-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.get(route('posts.edit', post.id));
+                                                }}
+                                                className="mr-2 text-blue-600 hover:underline text-sm"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(post.id);
+                                                }}
+                                                className="text-red-600 hover:underline text-sm"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )}
                                 </Post>
                             ))}
                         </div>
@@ -183,7 +192,7 @@ export default function Index({ posts: initialPosts }: Props) {
                 isOpen={isModalOpen}
                 onClose={closeCommentModal}
                 post={selectedPost}
-                currentUser={{ id: posts[0]?.user.id ?? 0, name: posts[0]?.user.name ?? 'User' }}
+                currentUser={{ id: current_user_id, name: 'You' }} 
                 onPostUpdate={handlePostUpdate}
             />
         </AppLayout>

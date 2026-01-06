@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Post;
 use App\Models\Like;
-use App\Models\Comment;
 use App\Models\Share;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // Ensure this Trait is available
 
 class PostController extends Controller
 {
+    // Ensure your base Controller uses AuthorizesRequests, 
+    // or include it here if your setup is different.
+    use AuthorizesRequests;
+
     /**
      * Display a listing of the posts for the authenticated user.
      */
@@ -22,7 +25,8 @@ class PostController extends Controller
     {
         $currentUser = Auth::user();
 
-        $posts = Post::with([
+        $posts = Post::where('user_id', $currentUser->id)
+            ->with([
                 'user:id,name',
                 'likes',
                 'shares', 
@@ -51,6 +55,11 @@ class PostController extends Controller
                         'id' => $post->user->id,
                         'name' => $post->user->name,
                         'avatar' => $post->user->avatar ?? null,
+                    ],
+                    // PERMISSIONS: Pass policy results to frontend
+                    'can' => [
+                        'update' => $currentUser ? $currentUser->can('update', $post) : false,
+                        'delete' => $currentUser ? $currentUser->can('delete', $post) : false,
                     ],
                     'comments' => $post->comments->map(function ($comment) {
                         return [
@@ -105,6 +114,9 @@ class PostController extends Controller
     {
         $currentUser = Auth::user();
 
+        // Optional: Ensure user can view (mostly useful if you have private posts)
+        // $this->authorize('view', $post); 
+
         $post->load([
             'user:id,name',
             'likes',
@@ -133,6 +145,11 @@ class PostController extends Controller
                 'name' => $post->user->name,
                 'avatar' => $post->user->avatar ?? null,
             ],
+            // PERMISSIONS
+            'can' => [
+                'update' => $currentUser ? $currentUser->can('update', $post) : false,
+                'delete' => $currentUser ? $currentUser->can('delete', $post) : false,
+            ],
             'comments' => $post->comments->map(function ($comment) {
                 return [
                     'id' => $comment->id,
@@ -158,6 +175,9 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
+        // REPLACED manual check with Policy
+        $this->authorize('update', $post);
+
         $post->image_url = $post->image ? Storage::url($post->image) : null;
 
         return Inertia::render('post/edit', [
@@ -170,6 +190,9 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post)
     {
+        // REPLACED manual check with Policy
+        $this->authorize('update', $post);
+
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
@@ -198,6 +221,9 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
+        // REPLACED manual check with Policy
+        $this->authorize('delete', $post);
+
         if ($post->image) {
             Storage::disk('public')->delete($post->image);
         }
@@ -218,6 +244,7 @@ class PostController extends Controller
             abort(403, 'You must be logged in to like a post.');
         }
 
+        // ... (Keep existing like logic)
         $like = Like::where('user_id', $user->id)
                     ->where('post_id', $post->id)
                     ->first();
@@ -247,17 +274,15 @@ class PostController extends Controller
             abort(403, 'You must be logged in to share a post.');
         }
 
-        // Check for existing share
+        // ... (Keep existing share logic)
         $existingShare = $post->shares()
                               ->where('user_id', $user->id)
                               ->first();
 
         if ($existingShare) {
-            // Unshare
             $existingShare->delete();
             $message = 'You unshared the post.';
         } else {
-            // Share
             $post->shares()->create([
                 'user_id' => $user->id,
             ]);
