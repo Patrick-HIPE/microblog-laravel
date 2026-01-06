@@ -169,9 +169,13 @@ export default function Post({
 
                 <button
                     onClick={(e) => { e.stopPropagation(); onShare(post.id); }}
-                    className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                    className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                        post.shared_by_user 
+                        ? 'text-blue-600 dark:text-blue-500'   
+                        : 'text-neutral-600 dark:text-neutral-400'
+                    }`}
                 >
-                    <Share2 className="h-5 w-5" />
+                    <Share2 className={`h-5 w-5 ${post.shared_by_user ? 'fill-current' : ''}`} />
                     Share
                 </button>
             </div>
