@@ -52,7 +52,7 @@ export default function FlashMessage() {
 
                 <button 
                     onClick={() => setIsVisible(false)}
-                    className={`shrink-0 rounded-md p-0.5 transition-colors hover:bg-black/5 dark:hover:bg-white/10`}
+                    className={`shrink-0 rounded-md p-0.5 transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer`}
                 >
                     <X className="h-4 w-4" />
                     <span className="sr-only">Close</span>

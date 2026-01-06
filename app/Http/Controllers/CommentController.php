@@ -7,6 +7,7 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\UpdateCommentRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CommentController extends Controller
@@ -25,15 +26,15 @@ class CommentController extends Controller
         return redirect()->back()->with('message', 'Comment created successfully!');
     }
 
-    public function update(Request $request, Comment $comment)
+    public function update(UpdateCommentRequest $request, Comment $comment)
     {
         $this->authorize('update', $comment);
 
-        $request->validate(['body' => 'required|string|max:1000']);
+        $request->validated();
 
         $comment->update(['body' => $request->body]);
 
-        return back()->with('message', 'Comment updated successfully!');
+        return redirect()->back()->with('message', 'Comment updated successfully!');
     }
 
     public function destroy(Comment $comment)
@@ -42,6 +43,6 @@ class CommentController extends Controller
 
         $comment->delete();
 
-        return back()->with('message', 'Comment deleted successfully!');
+        return redirect()->back()->with('message', 'Comment deleted successfully!');
     }
 }
