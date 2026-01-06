@@ -1,4 +1,5 @@
-import { Heart, MessageCircle, Share2, User, MoreHorizontal } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Heart, MessageCircle, Share2, User, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Post as PostType } from '@/types';
 
 interface PostProps {
@@ -8,17 +9,54 @@ interface PostProps {
     onComment: (post: PostType) => void;
     onClick: (postId: number) => void;
     onShare: (postId: number) => void;
+    // New props for the actions
+    onEdit?: (post: PostType) => void;
+    onDelete?: (postId: number) => void;
     children?: React.ReactNode;
 }
 
-export default function Post({ post, onLike, onComment, onClick, onShare, children }: PostProps) {
+export default function Post({ 
+    post, 
+    currentUserId, 
+    onLike, 
+    onComment, 
+    onClick, 
+    onShare, 
+    onEdit, 
+    onDelete, 
+    children 
+}: PostProps) {
+    const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Handle closing menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (showMenu && menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setShowMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showMenu]);
+
+    const toggleMenu = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setShowMenu(!showMenu);
+    };
+
     return (
-        <div className="flex flex-col rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 pt-4">
+        <div className="flex flex-col rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">            <div className="flex items-center justify-between px-4 pt-4">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
-                        <User className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                        {post.user?.avatar ? (
+                            <img src={post.user.avatar} alt={post.user.name} className="h-10 w-10 rounded-full object-cover" />
+                        ) : (
+                            <User className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                        )}
                     </div>
                     <div className="flex flex-col">
                         <span className="text-sm font-semibold text-neutral-900 dark:text-white">
@@ -31,24 +69,68 @@ export default function Post({ post, onLike, onComment, onClick, onShare, childr
                         </span>
                     </div>
                 </div>
-                <MoreHorizontal className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+
+                {post.user?.id === currentUserId && (
+                    <div className="relative">
+                        <button 
+                            onClick={toggleMenu}
+                            className={`rounded-full p-1.5 transition-colors cursor-pointer ${
+                                showMenu 
+                                ? 'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-white' 
+                                : 'text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
+                            }`}
+                        >
+                            <MoreHorizontal className="h-5 w-5" />
+                        </button>
+
+                        {showMenu && (
+                            <div 
+                                ref={menuRef}
+                                className="absolute right-0 top-full z-30 mt-1 min-w-[140px] overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl animate-in fade-in zoom-in-95 duration-100 dark:border-neutral-700 dark:bg-neutral-900"
+                                onClick={(e) => e.stopPropagation()} 
+                            >
+                                <div className="p-1">
+                                    {onEdit && (
+                                        <button
+                                            onClick={() => { setShowMenu(false); onEdit(post); }}
+                                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-neutral-700 rounded-md hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                            Edit
+                                        </button>
+                                    )}
+                                    {onDelete && (
+                                        <button
+                                            onClick={() => { setShowMenu(false); onDelete(post.id); }}
+                                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 rounded-md hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            Delete
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+                
+                {post.user?.id !== currentUserId && (
+                     <MoreHorizontal className="h-5 w-5 text-neutral-300 dark:text-neutral-700" />
+                )}
             </div>
 
-            {/* Content */}
             <div className="cursor-pointer px-4 py-3" onClick={() => onClick(post.id)}>
                 <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-neutral-900 dark:text-neutral-100">
                     {post.content}
                 </p>
             </div>
 
-            {/* Image */}
             {post.image_url && (
                 <div className="cursor-pointer overflow-hidden bg-neutral-100 dark:bg-neutral-800" onClick={() => onClick(post.id)}>
                     <img src={post.image_url} alt="Post image" className="h-auto w-full object-cover" loading="lazy" />
                 </div>
             )}
 
-            {/* Counts */}
             <div className="mx-4 mt-3 flex items-center justify-between border-b border-neutral-100 pb-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
                 <div className="flex items-center gap-1">
                     {post.likes_count > 0 && (
@@ -66,7 +148,6 @@ export default function Post({ post, onLike, onComment, onClick, onShare, childr
                 </div>
             </div>
 
-            {/* Actions */}
             <div className="flex px-2 py-1">
                 <button
                     onClick={(e) => { e.stopPropagation(); onLike(post.id); }}

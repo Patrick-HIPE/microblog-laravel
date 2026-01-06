@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'My Posts', href: '/posts' },
   { title: 'Edit Post', href: '/posts/update' },
 ];
 

@@ -99,6 +99,18 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
         setSelectedPost(null);
     };
 
+    const handleDelete = (postId: number) => {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+
+        router.delete(route('posts.destroy', postId), {
+            onSuccess: () => setPosts((prev) => prev.filter((p) => p.id !== postId)),
+        });
+    };
+
+    const handleEdit = (post: PostType) => {
+        router.get(route('posts.edit', post.id));
+    };
+
     const handlePostUpdate = (updatedPost: PostType) => {
         setSelectedPost(updatedPost);
         setPosts((prevPosts) => 
@@ -125,7 +137,8 @@ export default function Dashboard({ posts: initialPosts = [] }: DashboardProps) 
                                     onLike={handleLike}
                                     onComment={openCommentModal}
                                     onShare={handleShare}
-                                    
+                                    onEdit={handleEdit}
+                                    onDelete={handleDelete}
                                 />
                             ))}
                         </div>

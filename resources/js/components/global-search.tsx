@@ -26,29 +26,22 @@ interface SearchResults {
 }
 
 export function GlobalSearch() {
-    // === State ===
-    const [openDialog, setOpenDialog] = useState(false); // Mobile Modal state
-    const [openDropdown, setOpenDropdown] = useState(false); // Desktop Dropdown state
+    const [openDialog, setOpenDialog] = useState(false); 
+    const [openDropdown, setOpenDropdown] = useState(false); 
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SearchResults>({ users: [] });
     const [loading, setLoading] = useState(false);
     
-    // Ref for detecting clicks outside the component on desktop
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // === Effects ===
-
-    // Keyboard shortcut (Cmd+K)
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 if (window.innerWidth >= 768) {
-                    // Desktop: Focus the existing input
                     const input = document.querySelector('#global-search-input') as HTMLInputElement;
                     input?.focus();
                 } else {
-                    // Mobile: Open the modal
                     setOpenDialog((open) => !open);
                 }
             }
@@ -57,7 +50,6 @@ export function GlobalSearch() {
         return () => document.removeEventListener("keydown", down);
     }, []);
 
-    // Handle clicking outside to close desktop dropdown
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -68,7 +60,6 @@ export function GlobalSearch() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Search API Logic (Debounced)
     useEffect(() => {
         if (!query) {
             setResults({ users: [] });
@@ -78,7 +69,7 @@ export function GlobalSearch() {
 
         const delayDebounceFn = setTimeout(() => {
             setLoading(true);
-            setOpenDropdown(true); // Ensure dropdown is open when searching
+            setOpenDropdown(true); 
             axios.get(route('global.search'), { params: { query } })
                 .then((res) => {
                     setResults(res.data);
@@ -93,29 +84,22 @@ export function GlobalSearch() {
         return () => clearTimeout(delayDebounceFn);
     }, [query]);
 
-    // === Handlers ===
-
     const handleSelectUser = (id: number) => {
         setOpenDialog(false);
         setOpenDropdown(false);
-        setQuery(""); // Clear query on selection (optional)
+        setQuery("");
         router.visit(route('profile.show', id));
     };
 
     const clearSearch = () => {
         setQuery("");
         setOpenDropdown(false);
-        // Focus back on input
         const input = document.querySelector('#global-search-input') as HTMLInputElement;
         input?.focus();
     };
 
     return (
         <>
-            {/* ==============================
-                MOBILE VIEW (< md)
-                Just an Icon Button -> Opens Modal
-               ============================== */}
             <div className="md:hidden">
                 <Button
                     variant="ghost"
@@ -127,10 +111,6 @@ export function GlobalSearch() {
                 </Button>
             </div>
 
-            {/* ==============================
-                DESKTOP VIEW (>= md)
-                Direct Input -> Drops down results
-               ============================== */}
             <div 
                 ref={containerRef} 
                 className="hidden md:block relative w-full max-w-sm lg:max-w-lg"
@@ -147,7 +127,6 @@ export function GlobalSearch() {
                         autoComplete="off"
                     />
                     
-                    {/* Loading Spinner or Clear Button */}
                     <div className="absolute right-2.5 top-2.5 flex items-center">
                         {loading ? (
                             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -162,26 +141,22 @@ export function GlobalSearch() {
                     </div>
                 </div>
 
-                {/* The Floating Dropdown Results */}
                 {openDropdown && query && (
                     <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-lg outline-none animate-in fade-in-0 zoom-in-95 z-50 overflow-hidden">
                         <Command shouldFilter={false}>
                             <CommandList>
-                                {/* Loading State inside dropdown (optional, if you want to show it here too) */}
                                 {loading && (
                                     <div className="py-6 text-center text-sm text-muted-foreground">
                                         Searching...
                                     </div>
                                 )}
                                 
-                                {/* Empty State */}
                                 {!loading && results.users.length === 0 && (
                                     <CommandEmpty className="py-6 text-center text-sm">
                                         No users found.
                                     </CommandEmpty>
                                 )}
 
-                                {/* Results */}
                                 {!loading && results.users.length > 0 && (
                                     <CommandGroup heading="Users">
                                         {results.users.map((user) => (
@@ -206,9 +181,6 @@ export function GlobalSearch() {
                 )}
             </div>
 
-            {/* ==============================
-                SHARED: Mobile Modal Component
-               ============================== */}
             <CommandDialog open={openDialog} onOpenChange={setOpenDialog}>
                 <CommandInput 
                     placeholder="Search users..." 

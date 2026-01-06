@@ -41,6 +41,10 @@ export default function Index({ posts: initialPosts, current_user_id }: Props) {
         });
     };
 
+    const handleEdit = (post: PostType) => {
+        router.get(route('posts.edit', post.id));
+    };
+
     const handleLike = (postId: number) => {
         setPosts((currentPosts) => 
             currentPosts.map((post) => {
@@ -101,7 +105,6 @@ export default function Index({ posts: initialPosts, current_user_id }: Props) {
             currentPosts.map((post) => {
                 if (post.id === postId) {
                     const isNowShared = !post.shared_by_user;
-                    
                     return {
                         ...post,
                         shared_by_user: isNowShared,
@@ -148,30 +151,9 @@ export default function Index({ posts: initialPosts, current_user_id }: Props) {
                                     onLike={handleLike}
                                     onComment={openCommentModal}
                                     onShare={handleShare}
-                                >
-                                    {post.user.id === current_user_id && (
-                                        <div className="flex justify-end mt-2">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    router.get(route('posts.edit', post.id));
-                                                }}
-                                                className="mr-2 text-blue-600 hover:underline text-sm"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDelete(post.id);
-                                                }}
-                                                className="text-red-600 hover:underline text-sm"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    )}
-                                </Post>
+                                    onEdit={handleEdit}
+                                    onDelete={handleDelete}
+                                />
                             ))}
                         </div>
                     ) : (

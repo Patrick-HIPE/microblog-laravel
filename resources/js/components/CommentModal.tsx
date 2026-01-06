@@ -215,7 +215,7 @@ export default function CommentModal({
                                                 </div>
                                             </form>
                                         ) : (
-                                            <div className="relative rounded-lg bg-neutral-50 p-3 pb-6 dark:bg-neutral-800 group-hover:bg-neutral-100 dark:group-hover:bg-neutral-750 transition-colors cursor-pointer">
+                                            <div className="relative rounded-lg bg-neutral-50 p-3 pb-6 dark:bg-neutral-800 group-hover:bg-neutral-100 dark:group-hover:bg-neutral-750 transition-colors">
                                                 <div className="flex items-center justify-between mb-1">
                                                     <span className="text-sm font-semibold text-neutral-900 dark:text-white">
                                                         {comment.user?.name || 'User'}
@@ -228,13 +228,13 @@ export default function CommentModal({
                                                     <div className="absolute bottom-2 right-2">
                                                         <button 
                                                             onClick={(e) => toggleCommentMenu(e, comment.id)}
-                                                            className={`rounded-full p-1.5 transition-colors ${
+                                                            className={`rounded-full p-1.5 transition-colors cursor-pointer ${
                                                                 openMenuId === comment.id 
                                                                 ? 'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white' 
                                                                 : 'text-neutral-400 hover:bg-neutral-200 hover:text-neutral-600 dark:hover:bg-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300'
                                                             }`}
                                                         >
-                                                            <MoreHorizontal className="h-4 w-4 cursor-pointer" />
+                                                            <MoreHorizontal className="h-4 w-4" />
                                                         </button>
 
                                                         {openMenuId === comment.id && (
@@ -304,7 +304,7 @@ export default function CommentModal({
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-200 transition-colors"
+                                        className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-200 transition-colors cursor-pointer"
                                     >
                                         {processing ? 'Posting...' : 'Post'}
                                     </button>
