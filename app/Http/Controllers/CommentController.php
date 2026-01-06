@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CommentController extends Controller
 {
-    use AuthorizesRequests; // <-- correct usage
+    use AuthorizesRequests;
 
     public function store(StoreCommentRequest $request, Post $post)
     {

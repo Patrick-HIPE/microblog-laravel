@@ -10,12 +10,10 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // Ensure this Trait is available
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PostController extends Controller
 {
-    // Ensure your base Controller uses AuthorizesRequests, 
-    // or include it here if your setup is different.
     use AuthorizesRequests;
 
     /**
@@ -56,7 +54,6 @@ class PostController extends Controller
                         'name' => $post->user->name,
                         'avatar' => $post->user->avatar ?? null,
                     ],
-                    // PERMISSIONS: Pass policy results to frontend
                     'can' => [
                         'update' => $currentUser ? $currentUser->can('update', $post) : false,
                         'delete' => $currentUser ? $currentUser->can('delete', $post) : false,
@@ -113,9 +110,6 @@ class PostController extends Controller
     public function show(Post $post)
     {
         $currentUser = Auth::user();
-
-        // Optional: Ensure user can view (mostly useful if you have private posts)
-        // $this->authorize('view', $post); 
 
         $post->load([
             'user:id,name',
@@ -175,7 +169,6 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-        // REPLACED manual check with Policy
         $this->authorize('update', $post);
 
         $post->image_url = $post->image ? Storage::url($post->image) : null;
@@ -190,7 +183,6 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post)
     {
-        // REPLACED manual check with Policy
         $this->authorize('update', $post);
 
         $data = $request->validated();
@@ -221,7 +213,6 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        // REPLACED manual check with Policy
         $this->authorize('delete', $post);
 
         if ($post->image) {
@@ -244,7 +235,6 @@ class PostController extends Controller
             abort(403, 'You must be logged in to like a post.');
         }
 
-        // ... (Keep existing like logic)
         $like = Like::where('user_id', $user->id)
                     ->where('post_id', $post->id)
                     ->first();
@@ -274,7 +264,6 @@ class PostController extends Controller
             abort(403, 'You must be logged in to share a post.');
         }
 
-        // ... (Keep existing share logic)
         $existingShare = $post->shares()
                               ->where('user_id', $user->id)
                               ->first();

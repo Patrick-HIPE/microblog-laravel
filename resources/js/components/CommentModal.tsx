@@ -104,8 +104,6 @@ export default function CommentModal({
             },
             onSuccess: () => {
                 reset();
-                // Optional: Don't close modal immediately on comment success to encourage discussion
-                // onClose(); 
             },
         });
     };
@@ -175,8 +173,6 @@ export default function CommentModal({
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px]">
                     {activePost.comments && activePost.comments.length > 0 ? (
                         activePost.comments.map((comment, index) => {
-                            // Smart Positioning Logic: 
-                            // If it's one of the last 2 items, open upwards so it doesn't clip
                             const isNearBottom = activePost.comments && index > activePost.comments.length - 2;
                             
                             return (
@@ -287,9 +283,11 @@ export default function CommentModal({
                     <div className="flex gap-3">
                         <div className="hidden sm:block flex-shrink-0">
                              <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center dark:bg-neutral-800">
-                                <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">
-                                    {currentUser.name.charAt(0)}
-                                </span>
+                                {currentUser.avatar ? (
+                                    <img src={currentUser.avatar} alt={currentUser.name} className="h-8 w-8 rounded-full object-cover" />
+                                ) : (
+                                    <User className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                                )}
                             </div>
                         </div>
                         <div className="flex-1">
