@@ -23,14 +23,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/global-search', SearchController::class)->name('global.search');
     // Post
     Route::resource('posts', PostController::class);
-    // Like
     Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.toggle-like');
-    // Comment
-    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
-    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('posts.comments.update');
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('posts.comments.destroy');
-    // Share
     Route::post('/posts/{post}/share', [PostController::class, 'share'])->name('posts.share');
+    // Comment
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::resource('comments', CommentController::class)->only(['update', 'destroy']);
     // Profile
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/users/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])->name('users.toggle-follow');

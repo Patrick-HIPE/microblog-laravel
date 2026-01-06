@@ -84,8 +84,8 @@ export default function CommentModal({
         e.preventDefault();
         if (!activePost) return;
 
-        submitCreate(route('posts.comments.store', activePost.id), {
-            preserveScroll: true,
+        submitCreate(route('comments.store', activePost.id), {
+            preserveScroll: true,   
             onStart: () => {
                 const tempComment: Comment = {
                     id: Math.random(),
@@ -111,7 +111,7 @@ export default function CommentModal({
     const submitEditComment = (e: React.FormEvent, commentId: number) => {
         e.preventDefault();
         
-        editCommentForm.put(route('posts.comments.update', commentId), {
+        editCommentForm.put(route('comments.update', commentId), {
             preserveScroll: true,
             onSuccess: () => {
                 setEditingCommentId(null);
@@ -133,7 +133,7 @@ export default function CommentModal({
         setOpenMenuId(null);
         if (!confirm('Are you sure you want to delete this comment?')) return;
 
-        router.delete(route('posts.comments.destroy', commentId), {
+        router.delete(route('comments.destroy', commentId), {
             preserveScroll: true,
             onSuccess: () => {
                 if (!activePost.comments) return;
