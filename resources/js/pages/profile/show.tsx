@@ -125,6 +125,18 @@ export default function Show({
         );
     };
 
+    const handleDelete = (postId: number) => {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+
+        router.delete(route('posts.destroy', postId), {
+            onSuccess: () => setPosts((prev) => prev.filter((p) => p.id !== postId)),
+        });
+    };
+
+    const handleEdit = (post: PostType) => {
+        router.get(route('posts.edit', post.id));
+    };
+
     const handleShare = (postId: number) => {
         setPosts((currentPosts) =>
             currentPosts.map((post) => {
@@ -240,6 +252,8 @@ export default function Show({
                                     onLike={handleLike}
                                     onComment={openCommentModal}
                                     onShare={handleShare}
+                                    onEdit={handleEdit}
+                                    onDelete={handleDelete}
                                 />
                             ))}
                         </div>
