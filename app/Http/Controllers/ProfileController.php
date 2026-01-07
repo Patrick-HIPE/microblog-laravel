@@ -29,41 +29,42 @@ class ProfileController extends Controller
                 'shares'
             ])
             ->latest()
-            ->get()
-            ->map(function ($post) use ($currentUser) {
-                return [
-                    'id' => $post->id,
-                    'content' => $post->content,
-                    'image_url' => $post->image ? Storage::url($post->image) : null,
-                    'created_at' => $post->created_at,
-                    'updated_at' => $post->updated_at,
-                    'likes_count' => $post->likes->count(),
-                    'comments_count' => $post->comments->count(),
-                    'shares_count' => $post->shares->count(),
-                    'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
-                    'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
-                    'user' => [
-                        'id' => $post->user->id,
-                        'name' => $post->user->name,
-                    ],
-                    'comments' => $post->comments->map(function ($comment) {
-                        return [
-                            'id' => $comment->id,
-                            'body' => $comment->body,
-                            'created_at' => $comment->created_at,
-                            'user' => [
-                                'id' => $comment->user->id,
-                                'name' => $comment->user->name,
-                                'avatar' => $comment->user->avatar ?? null,
-                            ],
-                        ];
-                    }),
-                ];
-            });
+            ->paginate(10); 
+
+        $posts->getCollection()->transform(function ($post) use ($currentUser) {
+            return [
+                'id' => $post->id,
+                'content' => $post->content,
+                'image_url' => $post->image ? Storage::url($post->image) : null,
+                'created_at' => $post->created_at,
+                'updated_at' => $post->updated_at,
+                'likes_count' => $post->likes->count(),
+                'comments_count' => $post->comments->count(),
+                'shares_count' => $post->shares->count(),
+                'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
+                'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
+                'user' => [
+                    'id' => $post->user->id,
+                    'name' => $post->user->name,
+                ],
+                'comments' => $post->comments->map(function ($comment) {
+                    return [
+                        'id' => $comment->id,
+                        'body' => $comment->body,
+                        'created_at' => $comment->created_at,
+                        'user' => [
+                            'id' => $comment->user->id,
+                            'name' => $comment->user->name,
+                            'avatar' => $comment->user->avatar ?? null,
+                        ],
+                    ];
+                }),
+            ];
+        });
 
         return Inertia::render('profile/show', [
             'user' => $user->load('followers', 'following'),
-            'posts' => $posts,
+            'posts' => $posts, 
             'current_user_id' => $currentUser?->id,
             'user_is_followed' => $isFollowed,
         ]);

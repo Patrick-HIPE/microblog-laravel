@@ -9,6 +9,16 @@ import Post from "@/components/Post";
 import CommentModal from "@/components/CommentModal";
 import FlashMessage from '@/components/flash-message';
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: "Profile", href: "/profile" },
 ];
@@ -24,9 +34,19 @@ export interface User {
     following: { id: number }[];
 }
 
+interface PaginationMeta {
+    data: PostType[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    next_page_url: string | null;
+    prev_page_url: string | null;
+}
+
 interface Props {
     user: User;
-    posts: PostType[];
+    posts: PaginationMeta; 
     current_user_id: number | null;
     user_is_followed: boolean;
 }
@@ -51,21 +71,83 @@ export default function Show({
 
     const [isFollowed, setIsFollowed] = useState(user_is_followed);
 
-    const [postsState, setPosts] = useState<PostType[]>(
-        posts.map((p) => ({
+    const normalizePosts = (rawPosts: PostType[]) => {
+        return rawPosts.map((p) => ({
             ...p,
             likes_count: p.likes_count ?? 0,
             comments_count: p.comments_count ?? 0,
             shares_count: p.shares_count ?? 0,
             liked_by_user: p.liked_by_user ?? false,
             user: p.user ?? { id: 0, name: "Unknown User" },
-        }))
-    );
+        }));
+    };
+
+    const [prevPostsData, setPrevPostsData] = useState(posts.data);
+    const [postsState, setPosts] = useState<PostType[]>(normalizePosts(posts.data));
+
+    if (posts.data !== prevPostsData) {
+        setPrevPostsData(posts.data);
+        setPosts(normalizePosts(posts.data));
+    }
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
     const isOwnProfile = current_user_id === user.id;
+
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > posts.last_page || page === posts.current_page) return;
+        
+        router.get(window.location.pathname, { page }, {
+            preserveState: true,
+            preserveScroll: true, 
+        });
+    };
+
+    const renderPaginationItems = () => {
+        const items = [];
+        const maxVisiblePages = 5;
+        const { current_page, last_page } = posts;
+
+        if (last_page <= maxVisiblePages) {
+            for (let i = 1; i <= last_page; i++) items.push(i);
+        } else {
+            items.push(1);
+            if (current_page > 3) items.push('ellipsis-start');
+
+            const start = Math.max(2, current_page - 1);
+            const end = Math.min(last_page - 1, current_page + 1);
+
+            for (let i = start; i <= end; i++) items.push(i);
+
+            if (current_page < last_page - 2) items.push('ellipsis-end');
+            items.push(last_page);
+        }
+
+        return items.map((item, index) => {
+            if (typeof item === 'number') {
+                return (
+                    <PaginationItem key={index}>
+                        <PaginationLink
+                            href="#"
+                            isActive={item === posts.current_page}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(item);
+                            }}
+                        >
+                            {item}
+                        </PaginationLink>
+                    </PaginationItem>
+                );
+            }
+            return (
+                <PaginationItem key={index}>
+                    <PaginationEllipsis />
+                </PaginationItem>
+            );
+        });
+    };
 
     const handleFollow = () => {
         router.post(
@@ -86,9 +168,7 @@ export default function Show({
         setPosts((current) =>
             current.map((post) => {
                 if (post.id !== postId) return post;
-
                 const isNowLiked = !post.liked_by_user;
-
                 return {
                     ...post,
                     liked_by_user: isNowLiked,
@@ -102,10 +182,7 @@ export default function Show({
         router.post(
             route("posts.toggle-like", postId),
             {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-            }
+            { preserveScroll: true, preserveState: true }
         );
     };
 
@@ -127,7 +204,6 @@ export default function Show({
 
     const handleDelete = (postId: number) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
-
         router.delete(route('posts.destroy', postId), {
             onSuccess: () => setPosts((prev) => prev.filter((p) => p.id !== postId)),
         });
@@ -142,7 +218,6 @@ export default function Show({
             currentPosts.map((post) => {
                 if (post.id === postId) {
                     const isNowShared = !post.shared_by_user;
-                    
                     return {
                         ...post,
                         shared_by_user: isNowShared,
@@ -198,26 +273,14 @@ export default function Show({
                         <div className="flex flex-wrap gap-2">
                             <Button
                                 className="cursor-pointer"
-                                onClick={() =>
-                                    router.get(
-                                        route("profile.followers", {
-                                            user: user.id,
-                                        })
-                                    )
-                                }
+                                onClick={() => router.get(route("profile.followers", { user: user.id }))}
                             >
                                 Followers ({user.followers.length})
                             </Button>
 
                             <Button
                                 className="cursor-pointer"
-                                onClick={() =>
-                                    router.get(
-                                        route("profile.following", {
-                                            user: user.id,
-                                        })
-                                    )
-                                }
+                                onClick={() => router.get(route("profile.following", { user: user.id }))}
                             >
                                 Following ({user.following.length})
                             </Button>
@@ -239,24 +302,56 @@ export default function Show({
 
                     <hr />
 
-                    <h3 className="text-lg font-semibold">Owned Posts</h3>
+                    <h3 className="text-lg font-semibold">Posts</h3>
 
                     {postsState.length ? (
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {postsState.map((post: PostType) => (
-                                <Post
-                                    key={post.id}
-                                    post={post}
-                                    currentUserId={auth.user.id}
-                                    onClick={handlePostClick}
-                                    onLike={handleLike}
-                                    onComment={openCommentModal}
-                                    onShare={handleShare}
-                                    onEdit={handleEdit}
-                                    onDelete={handleDelete}
-                                />
-                            ))}
-                        </div>
+                        <>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                {postsState.map((post: PostType) => (
+                                    <Post
+                                        key={post.id}
+                                        post={post}
+                                        currentUserId={auth.user.id}
+                                        onClick={handlePostClick}
+                                        onLike={handleLike}
+                                        onComment={openCommentModal}
+                                        onShare={handleShare}
+                                        onEdit={handleEdit}
+                                        onDelete={handleDelete}
+                                    />
+                                ))}
+                            </div>
+
+                            <div className="py-4 mt-4">
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious 
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handlePageChange(posts.current_page - 1);
+                                                }}
+                                                className={posts.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+
+                                        {renderPaginationItems()}
+
+                                        <PaginationItem>
+                                            <PaginationNext 
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handlePageChange(posts.current_page + 1);
+                                                }}
+                                                className={posts.current_page >= posts.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                            </div>
+                        </>
                     ) : (
                         <div className="text-center py-12 text-neutral-500">
                             This user hasn’t posted anything yet.
