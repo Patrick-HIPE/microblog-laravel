@@ -33,6 +33,7 @@ export default function Post({
 
     const CHAR_LIMIT = 80;
     const isLongText = post.content.length > CHAR_LIMIT;
+    const isOwner = post.user?.id === currentUserId;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -46,7 +47,9 @@ export default function Post({
 
     const toggleMenu = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setShowMenu(!showMenu);
+        if (isOwner) {
+            setShowMenu(!showMenu);
+        }
     };
 
     const toggleExpand = (e: React.MouseEvent) => {
@@ -55,9 +58,9 @@ export default function Post({
     };
 
     return (
-        <div className="flex flex-col rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <div className="flex items-center justify-between px-4 pt-4">
-                
+        <div className="flex flex-col rounded-xl border border-gray-100 bg-white shadow-sm transition-all dark:border-neutral-800 dark:bg-neutral-900">
+            {/* Header */}
+            <div className="flex items-start justify-between px-4 pt-4">
                 <div className="flex items-center gap-3">
                     {post.user ? (
                         <Link 
@@ -65,8 +68,8 @@ export default function Post({
                             className="flex items-center gap-3 group"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Avatar Display */}
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 transition-opacity group-hover:opacity-80 dark:bg-neutral-700">
+                            {/* Avatar */}
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-neutral-800">
                                 {post.user.avatar ? (
                                     <img 
                                         src={post.user.avatar} 
@@ -74,15 +77,15 @@ export default function Post({
                                         className="h-full w-full object-cover" 
                                     />
                                 ) : (
-                                    <User className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                                    <User className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
                                 )}
                             </div>
                             
                             <div className="flex flex-col">
-                                <span className="text-sm font-semibold text-neutral-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+                                <span className="text-sm font-semibold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-gray-100 dark:group-hover:text-blue-400">
                                     {post.user.name}
                                 </span>
-                                <span className="text-xs text-neutral-500">
+                                <span className="text-xs text-gray-500 dark:text-neutral-400">
                                     {new Date(post.created_at).toLocaleDateString(undefined, {
                                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                                     })}
@@ -90,68 +93,67 @@ export default function Post({
                             </div>
                         </Link>
                     ) : (
-                        <div className="flex items-center gap-3 opacity-50">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
-                                <User className="h-5 w-5 text-neutral-500" />
+                        <div className="flex items-center gap-3 opacity-60">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-800">
+                                <User className="h-5 w-5 text-gray-400" />
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-sm font-semibold text-neutral-900 dark:text-white">Unknown User</span>
+                                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Unknown User</span>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {post.user?.id === currentUserId && (
-                    <div className="relative">
-                        <button 
-                            onClick={toggleMenu}
-                            className={`rounded-full p-1.5 transition-colors cursor-pointer ${
-                                showMenu 
-                                ? 'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-white' 
-                                : 'text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
-                            }`}
-                        >
-                            <MoreHorizontal className="h-5 w-5" />
-                        </button>
+                {/* Dropdown Menu */}
+                <div className="relative">
+                    <button 
+                        onClick={toggleMenu}
+                        disabled={!isOwner}
+                        className={`rounded-full p-2 transition-colors ${
+                            isOwner 
+                                ? showMenu 
+                                    ? 'bg-gray-100 text-gray-900 dark:bg-neutral-800 dark:text-white cursor-pointer' 
+                                    : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300 cursor-pointer'
+                                : 'text-gray-200 dark:text-neutral-800 cursor-default' // Dimmed style when not owner
+                        }`}
+                    >
+                        <MoreHorizontal className="h-5 w-5" />
+                    </button>
 
-                        {showMenu && (
-                            <div 
-                                ref={menuRef}
-                                className="absolute right-0 top-full z-30 mt-1 min-w-[140px] overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl animate-in fade-in zoom-in-95 duration-100 dark:border-neutral-700 dark:bg-neutral-900"
-                                onClick={(e) => e.stopPropagation()} 
-                            >
-                                <div className="p-1">
-                                    {onEdit && (
-                                        <button
-                                            onClick={() => { setShowMenu(false); onEdit(post); }}
-                                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-neutral-700 rounded-md hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-                                        >
-                                            <Pencil className="h-4 w-4" /> Edit
-                                        </button>
-                                    )}
-                                    {onDelete && (
-                                        <button
-                                            onClick={() => { setShowMenu(false); onDelete(post.id); }}
-                                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 rounded-md hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
-                                        >
-                                            <Trash2 className="h-4 w-4" /> Delete
-                                        </button>
-                                    )}
-                                </div>
+                    {showMenu && isOwner && (
+                        <div 
+                            ref={menuRef}
+                            className="absolute right-0 top-full z-30 mt-1 min-w-[160px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-100 dark:border-neutral-800 dark:bg-neutral-900"
+                            onClick={(e) => e.stopPropagation()} 
+                        >
+                            <div className="p-1.5 space-y-0.5">
+                                {onEdit && (
+                                    <button
+                                        onClick={() => { setShowMenu(false); onEdit(post); }}
+                                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                                    >
+                                        <Pencil className="h-4 w-4 text-gray-500 dark:text-gray-400" /> Edit
+                                    </button>
+                                )}
+                                {onDelete && (
+                                    <button
+                                        onClick={() => { setShowMenu(false); onDelete(post.id); }}
+                                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+                                    >
+                                        <Trash2 className="h-4 w-4" /> Delete
+                                    </button>
+                                )}
                             </div>
-                        )}
-                    </div>
-                )}
-                
-                {post.user?.id !== currentUserId && (
-                     <MoreHorizontal className="h-5 w-5 text-neutral-300 dark:text-neutral-700" />
-                )}
+                        </div>
+                    )}
+                </div>
             </div>
 
+            {/* Content */}
             <div className="px-4 py-3">
                 <div 
-                    className={`whitespace-pre-wrap text-sm leading-relaxed text-neutral-900 dark:text-neutral-100 break-all
-                        ${!isExpanded ? 'line-clamp-1' : ''} 
+                    className={`whitespace-pre-wrap text-sm leading-relaxed text-gray-800 dark:text-gray-200 break-words
+                        ${!isExpanded ? 'line-clamp-3' : ''} 
                     `}
                 >
                     {post.content}
@@ -160,69 +162,77 @@ export default function Post({
                 {isLongText && (
                     <button 
                         onClick={toggleExpand}
-                        className="mt-1 text-xs font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:hover:text-white cursor-pointer"
+                        className="mt-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 hover:underline dark:text-neutral-400 dark:hover:text-neutral-200 cursor-pointer"
                     >
-                        {isExpanded ? 'See Less' : 'See More'}
+                        {isExpanded ? 'Show Less' : 'Read More'}
                     </button>
                 )}
             </div>
 
+            {/* Image Attachment */}
             {post.image_url && (
-                <div className="cursor-pointer w-full bg-neutral-100 dark:bg-neutral-900" onClick={() => onClick(post.id)}>
-                    <img src={post.image_url} alt="Post image" className="h-auto w-full object-cover" loading="lazy" />
+                <div className="cursor-pointer w-full bg-gray-50 dark:bg-black/50 border-y border-gray-100 dark:border-neutral-800" onClick={() => onClick(post.id)}>
+                    <img src={post.image_url} alt="Post content" className="max-h-[500px] w-full object-contain mx-auto" loading="lazy" />
                 </div>
             )}
 
-            <div className="mx-4 mt-3 flex items-center justify-between border-b border-neutral-100 pb-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                <div className="flex items-center gap-1">
+            {/* Stats Bar */}
+            <div className="mx-4 mt-3 flex items-center justify-between border-b border-gray-100 pb-3 text-xs text-gray-500 dark:border-neutral-800 dark:text-neutral-400 font-medium">
+                <div className="flex items-center gap-1.5 min-h-[20px]">
                     {post.likes_count > 0 && (
                         <>
                             <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
                                 <Heart className="h-2.5 w-2.5 fill-white text-white" />
                             </div>
-                            <span>{post.likes_count}</span>
+                            <span>{post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}</span>
                         </>
                     )}
                 </div>
-                <div className="flex gap-3">
-                    <span>{post.comments_count} comments</span>
-                    <span>{post.shares_count} shares</span>
+                <div className="flex gap-4">
+                    <span className="hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); onComment(post); }}>
+                        {post.comments_count} comments
+                    </span>
+                    <span className="hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); onShare(post.id); }}>
+                        {post.shares_count} shares
+                    </span>
                 </div>
             </div>
 
             <div className="flex px-2 py-1">
                 <button
                     onClick={(e) => { e.stopPropagation(); onLike(post.id); }}
-                    className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                        post.liked_by_user ? 'text-red-600 dark:text-red-500' : 'text-neutral-600 dark:text-neutral-400'
+                    className={`group flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all duration-200 hover:bg-gray-50 active:scale-95 dark:hover:bg-neutral-800 ${
+                        post.liked_by_user 
+                        ? 'text-rose-600 dark:text-rose-500' 
+                        : 'text-gray-500 hover:text-rose-600 dark:text-gray-400 dark:hover:text-rose-400'
                     }`}
                 >
-                    <Heart className={`h-5 w-5 ${post.liked_by_user ? 'fill-current' : ''}`} />
+                    <Heart className={`h-5 w-5 transition-transform group-hover:scale-110 ${post.liked_by_user ? 'fill-current' : ''}`} />
                     Like
                 </button>
 
                 <button
                     onClick={(e) => { e.stopPropagation(); onComment(post); }}
-                    className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                    className="group flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium text-gray-500 transition-all duration-200 hover:bg-gray-50 hover:text-blue-600 active:scale-95 dark:text-gray-400 dark:hover:bg-neutral-800 dark:hover:text-blue-400"
                 >
-                    <MessageCircle className="h-5 w-5" />
+                    <MessageCircle className="h-5 w-5 transition-transform group-hover:scale-110" />
                     Comment
                 </button>
 
                 <button
                     onClick={(e) => { e.stopPropagation(); onShare(post.id); }}
-                    className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                    className={`group flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all duration-200 hover:bg-gray-50 active:scale-95 dark:hover:bg-neutral-800 ${
                         post.shared_by_user 
                         ? 'text-blue-600 dark:text-blue-500'   
-                        : 'text-neutral-600 dark:text-neutral-400'
+                        : 'text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400'
                     }`}
                 >
-                    <Share2 className={`h-5 w-5 ${post.shared_by_user ? 'fill-current' : ''}`} />
+                    <Share2 className={`h-5 w-5 transition-transform group-hover:scale-110 ${post.shared_by_user ? 'fill-current' : ''}`} />
                     Share
                 </button>
             </div>
 
-            {children && <div className="p-4">{children}</div>}
+            {children && <div className="px-4 pb-4">{children}</div>}
         </div>
     );
 }

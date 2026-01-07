@@ -104,6 +104,7 @@ export default function Profile({
                                     type="button" 
                                     variant="outline" 
                                     size="sm"
+                                    className="cursor-pointer"
                                     onClick={() => fileInputRef.current?.click()}
                                 >
                                     Select New Photo
@@ -165,7 +166,7 @@ export default function Profile({
                         )}
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>Save</Button>
+                            <Button disabled={processing} className="cursor-pointer">Save</Button>
                             <Transition
                                 show={recentlySuccessful}
                                 enter="transition ease-in-out"

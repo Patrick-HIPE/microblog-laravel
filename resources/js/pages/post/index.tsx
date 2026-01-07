@@ -8,7 +8,6 @@ import CommentModal from '@/components/CommentModal';
 import Post from '@/components/Post';
 import { useState } from 'react';
 
-// Import ShadCN Pagination
 import {
   Pagination,
   PaginationContent,
@@ -40,7 +39,6 @@ interface Props {
 
 export default function Index({ posts, current_user_id }: Props) {
     
-    // Helper to normalize post structure
     const normalizePosts = (rawPosts: PostType[]) => {
         return rawPosts.map((p) => ({
             ...p,
@@ -53,7 +51,6 @@ export default function Index({ posts, current_user_id }: Props) {
         }));
     };
 
-    // Derived State Pattern to avoid useEffect double-render
     const [prevPostsData, setPrevPostsData] = useState(posts.data);
     const [postsState, setPosts] = useState<PostType[]>(normalizePosts(posts.data));
 
@@ -158,7 +155,6 @@ export default function Index({ posts, current_user_id }: Props) {
         });
     };
 
-    // Pagination Logic
     const handlePageChange = (page: number) => {
         if (page < 1 || page > posts.last_page || page === posts.current_page) return;
         

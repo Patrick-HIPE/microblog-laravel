@@ -84,179 +84,168 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
         setCurrentPost(updatedPost);
     };
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return {
-            date: date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }),
-            time: date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-        };
-    };
-
-    const { date, time } = formatDate(currentPost.created_at);
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="View Post" />
             <FlashMessage />
 
-            <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-                <div className="w-full overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 md:max-w-3xl">
+            <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 items-center">
+                <div className="w-full flex flex-col rounded-xl border border-gray-100 bg-white shadow-sm transition-all dark:border-neutral-800 dark:bg-neutral-900 md:max-w-2xl">
                     
-                    {currentPost.image_url ? (
-                        <div className="w-full bg-white dark:bg-neutral-900">
-                            <img
-                                src={currentPost.image_url}
-                                alt="Post Image"
-                                className="max-h-[500px] w-full object-contain"
-                            />
-                        </div>
-                    ) : (
-                        <div className="relative w-full border-b border-neutral-100 bg-white dark:border-neutral-800 dark:bg-neutral-900" style={{ paddingTop: '30%' }}>
-                            <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/5 dark:stroke-neutral-100/5" />
-                        </div>
-                    )}
-
-                    <div className="p-4 md:p-4">
-                        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                            
-                            <div className="flex items-center gap-3">
-                                {currentPost.user ? (
-                                    <Link 
-                                        href={route('profile.show', currentPost.user.id)}
-                                        className="flex items-center gap-3 group"
-                                    >
-                                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-100 ring-1 ring-neutral-200 transition-opacity group-hover:opacity-80 dark:bg-neutral-800 dark:ring-neutral-700">
-                                            {currentPost.user.avatar ? (
-                                                <img src={currentPost.user.avatar} alt={currentPost.user.name} className="h-full w-full object-cover" />
-                                            ) : (
-                                                <User className="h-5 w-5 text-neutral-400" />
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-semibold text-neutral-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
-                                                {currentPost.user.name}
-                                            </span>
-                                            <span className="flex items-center gap-1 text-xs text-neutral-500">
-                                                {date}
-                                                <span className="text-neutral-300 dark:text-neutral-700">•</span>
-                                                {time}
-                                            </span>
-                                        </div>
-                                    </Link>
-                                ) : (
-                                    <div className="flex items-center gap-3 opacity-50">
-                                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-100 ring-1 ring-neutral-200 dark:bg-neutral-800 dark:ring-neutral-700">
-                                            <User className="h-5 w-5 text-neutral-400" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-semibold text-neutral-900 dark:text-white">
-                                                Unknown User
-                                            </span>
-                                            <span className="flex items-center gap-1 text-xs text-neutral-500">
-                                                {date}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex items-center gap-2 self-end sm:self-auto">
-                                {currentPost.user?.id === currentUserId && (
-                                    <div className="relative">
-                                        <button 
-                                            onClick={toggleMenu}
-                                            className={`cursor-pointer rounded-full p-2 transition-colors ${
-                                                showMenu 
-                                                ? 'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-white' 
-                                                : 'text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
-                                            }`}
-                                        >
-                                            <MoreHorizontal className="h-5 w-5" />
-                                        </button>
-
-                                        {showMenu && (
-                                            <div 
-                                                ref={menuRef}
-                                                className="animate-in fade-in zoom-in-95 absolute bottom-full right-0 mb-2 min-w-[140px] overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg duration-100 dark:border-neutral-700 dark:bg-neutral-900"
-                                                onClick={(e) => e.stopPropagation()} 
-                                            >
-                                                <div className="p-1">
-                                                    <button
-                                                        onClick={() => { setShowMenu(false); handleEdit(); }}
-                                                        className="flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                                                    >
-                                                        <Pencil className="h-4 w-4" /> Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setShowMenu(false); handleDelete(); }}
-                                                        className="flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" /> Delete
-                                                    </button>
-                                                </div>
-                                            </div>
+                    {/* Header */}
+                    <div className="flex items-start justify-between px-4 pt-4">
+                        <div className="flex items-center gap-3">
+                            {currentPost.user ? (
+                                <Link 
+                                    href={route('profile.show', currentPost.user.id)}
+                                    className="flex items-center gap-3 group"
+                                >
+                                    {/* Removed hover ring here */}
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-neutral-800">
+                                        {currentPost.user.avatar ? (
+                                            <img src={currentPost.user.avatar} alt={currentPost.user.name} className="h-full w-full object-cover" />
+                                        ) : (
+                                            <User className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
                                         )}
                                     </div>
-                                )}
-                            </div>
+                                    
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-semibold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-gray-100 dark:group-hover:text-blue-400">
+                                            {currentPost.user.name}
+                                        </span>
+                                        <span className="text-xs text-gray-500 dark:text-neutral-400">
+                                            {new Date(currentPost.created_at).toLocaleDateString(undefined, {
+                                                month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div className="flex items-center gap-3 opacity-60">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-800">
+                                        <User className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Unknown User</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Menu */}
+                        <div className="relative">
+                            {(currentPost.user?.id === currentUserId) && (
+                                <button 
+                                    onClick={toggleMenu}
+                                    className={`rounded-full p-2 transition-colors cursor-pointer ${
+                                        showMenu 
+                                        ? 'bg-gray-100 text-gray-900 dark:bg-neutral-800 dark:text-white' 
+                                        : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300'
+                                    }`}
+                                >
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </button>
+                            )}
+
+                            {showMenu && (
+                                <div 
+                                    ref={menuRef}
+                                    className="absolute right-0 top-full z-30 mt-1 min-w-[160px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-100 dark:border-neutral-800 dark:bg-neutral-900"
+                                    onClick={(e) => e.stopPropagation()} 
+                                >
+                                    <div className="p-1.5 space-y-0.5">
+                                        <button
+                                            onClick={() => { setShowMenu(false); handleEdit(); }}
+                                            className="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                                        >
+                                            <Pencil className="h-4 w-4 text-gray-500 dark:text-gray-400" /> Edit
+                                        </button>
+                                        <button
+                                            onClick={() => { setShowMenu(false); handleDelete(); }}
+                                            className="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+                                        >
+                                            <Trash2 className="h-4 w-4" /> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <div className="px-4 py-2 md:px-4 md:py-4">
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900 dark:text-neutral-100">
+                    {/* Content */}
+                    <div className="px-4 py-4 md:px-4 md:py-5">
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800 dark:text-gray-200 break-words">
                             {currentPost.content}
                         </p>
                     </div>
 
-                    <div className="border-t border-neutral-100 bg-white px-6 py-3 dark:border-neutral-800 dark:bg-neutral-900">
-                        <div className="mb-2 flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
-                            <div className="flex items-center gap-1">
-                                {currentPost.likes_count > 0 && (
-                                    <>
-                                        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
-                                            <Heart className="h-2.5 w-2.5 fill-white text-white" />
-                                        </div>
-                                        <span className="font-medium">{currentPost.likes_count}</span>
-                                    </>
-                                )}
-                            </div>
-                            <div className="flex gap-3">
-                                <span>{currentPost.comments_count} comments</span>
-                                <span>{currentPost.shares_count} shares</span>
-                            </div>
+                    {/* Image */}
+                    {currentPost.image_url ? (
+                        <div className="w-full bg-gray-50 dark:bg-black/50 border-y border-gray-100 dark:border-neutral-800">
+                            <img
+                                src={currentPost.image_url}
+                                alt="Post Image"
+                                className="max-h-[600px] w-full object-contain mx-auto"
+                            />
                         </div>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleLike}
-                                className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                                    currentPost.liked_by_user ? 'text-red-600 dark:text-red-500' : 'text-neutral-600 dark:text-neutral-400'
-                                }`}
-                            >
-                                <Heart className={`h-4 w-4 ${currentPost.liked_by_user ? 'fill-current' : ''}`} />
-                                Like
-                            </button>
-
-                            <button 
-                                onClick={openCommentModal}
-                                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
-                            >
-                                <MessageCircle className="h-4 w-4" />
-                                Comment
-                            </button>
-
-                            <button
-                                onClick={handleShare}
-                                className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-                                    currentPost.shared_by_user 
-                                    ? 'text-blue-600 dark:text-blue-500'   
-                                    : 'text-neutral-600 dark:text-neutral-400'
-                                }`}
-                            >
-                                <Share2 className={`h-4 w-4 ${currentPost.shared_by_user ? 'fill-current' : ''}`} />
-                                Share
-                            </button>
+                    ) : (
+                        <div className="relative w-full border-y border-neutral-100 bg-gray-50 dark:border-neutral-800 dark:bg-neutral-900/50" style={{ paddingTop: '40%' }}>
+                            <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/5 dark:stroke-neutral-100/5" />
                         </div>
+                    )}
+
+                    {/* Stats */}
+                    <div className="mx-4 mt-3 flex items-center justify-between border-b border-gray-100 pb-3 text-xs text-gray-500 dark:border-neutral-800 dark:text-neutral-400 font-medium">
+                        <div className="flex items-center gap-1.5 min-h-[20px]">
+                            {currentPost.likes_count > 0 && (
+                                <>
+                                    {/* Restored the Solid Red Heart here */}
+                                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500">
+                                        <Heart className="h-3 w-3 fill-white text-white" />
+                                    </div>
+                                    <span>{currentPost.likes_count} {currentPost.likes_count === 1 ? 'like' : 'likes'}</span>
+                                </>
+                            )}
+                        </div>
+                        <div className="flex gap-4">
+                            <span>{currentPost.comments_count} comments</span>
+                            <span>{currentPost.shares_count} shares</span>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex px-2 py-1 pb-2">
+                        <button
+                            onClick={handleLike}
+                            className={`group flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all duration-200 hover:bg-gray-50 active:scale-95 dark:hover:bg-neutral-800 ${
+                                currentPost.liked_by_user 
+                                ? 'text-rose-600 dark:text-rose-500' 
+                                : 'text-gray-500 hover:text-rose-600 dark:text-gray-400 dark:hover:text-rose-400'
+                            }`}
+                        >
+                            <Heart className={`h-5 w-5 transition-transform group-hover:scale-110 ${currentPost.liked_by_user ? 'fill-current' : ''}`} />
+                            Like
+                        </button>
+
+                        <button
+                            onClick={openCommentModal}
+                            className="group flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium text-gray-500 transition-all duration-200 hover:bg-gray-50 hover:text-blue-600 active:scale-95 dark:text-gray-400 dark:hover:bg-neutral-800 dark:hover:text-blue-400"
+                        >
+                            <MessageCircle className="h-5 w-5 transition-transform group-hover:scale-110" />
+                            Comment
+                        </button>
+
+                        <button
+                            onClick={handleShare}
+                            className={`group flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all duration-200 hover:bg-gray-50 active:scale-95 dark:hover:bg-neutral-800 ${
+                                currentPost.shared_by_user 
+                                ? 'text-blue-600 dark:text-blue-500'   
+                                : 'text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400'
+                            }`}
+                        >
+                            <Share2 className={`h-5 w-5 transition-transform group-hover:scale-110 ${currentPost.shared_by_user ? 'fill-current' : ''}`} />
+                            Share
+                        </button>
                     </div>
                 </div>
             </div>
