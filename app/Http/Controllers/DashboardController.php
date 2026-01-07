@@ -25,14 +25,12 @@ class DashboardController extends Controller
                 $query->where('user_id', Auth::id());
             }])
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
 
         $posts->getCollection()->transform(function ($post) {
             $post->image_url = $post->image ? Storage::url($post->image) : null;
-            
             $post->liked_by_user = $post->likes->isNotEmpty();
             $post->shared_by_user = $post->shares->isNotEmpty();
-            
             return $post;
         });
 
@@ -43,6 +41,8 @@ class DashboardController extends Controller
                 'last_page' => $posts->lastPage(),
                 'per_page' => $posts->perPage(),
                 'total' => $posts->total(),
+                'next_page_url' => $posts->nextPageUrl(),
+                'prev_page_url' => $posts->previousPageUrl(),
             ],
         ]);
     }
