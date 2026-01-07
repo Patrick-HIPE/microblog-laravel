@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share2, User, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { route } from 'ziggy-js';       
 import { Post as PostType } from '@/types';
 
 interface PostProps {
@@ -26,13 +28,9 @@ export default function Post({
     children 
 }: PostProps) {
     const [showMenu, setShowMenu] = useState(false);
-    
-    // 1. New State for Text Expansion
     const [isExpanded, setIsExpanded] = useState(false);
-    
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // Threshold to decide when to show "See More" (e.g., 200 chars)
     const CHAR_LIMIT = 200;
     const isLongText = post.content.length > CHAR_LIMIT;
 
@@ -42,11 +40,8 @@ export default function Post({
                 setShowMenu(false);
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showMenu]);
 
     const toggleMenu = (e: React.MouseEvent) => {
@@ -55,31 +50,49 @@ export default function Post({
     };
 
     const toggleExpand = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent navigating to post details
+        e.stopPropagation();
         setIsExpanded(!isExpanded);
     };
 
     return (
         <div className="flex flex-col rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
             <div className="flex items-center justify-between px-4 pt-4">
+                
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
-                        {post.user?.avatar ? (
-                            <img src={post.user.avatar} alt={post.user.name} className="h-10 w-10 rounded-full object-cover" />
-                        ) : (
-                            <User className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
-                        )}
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-neutral-900 dark:text-white">
-                            {post.user?.name || 'Unknown User'}
-                        </span>
-                        <span className="text-xs text-neutral-500">
-                            {new Date(post.created_at).toLocaleDateString(undefined, {
-                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                            })}
-                        </span>
-                    </div>
+                    {post.user ? (
+                        <Link 
+                            href={route('profile.show', post.user.id)}
+                            className="flex items-center gap-3 group"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 transition-opacity group-hover:opacity-80 dark:bg-neutral-700">
+                                {post.user.avatar ? (
+                                    <img src={post.user.avatar} alt={post.user.name} className="h-10 w-10 rounded-full object-cover" />
+                                ) : (
+                                    <User className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                                )}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-sm font-semibold text-neutral-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+                                    {post.user.name}
+                                </span>
+                                <span className="text-xs text-neutral-500">
+                                    {new Date(post.created_at).toLocaleDateString(undefined, {
+                                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                    })}
+                                </span>
+                            </div>
+                        </Link>
+                    ) : (
+                        <div className="flex items-center gap-3 opacity-50">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
+                                <User className="h-5 w-5 text-neutral-500" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-sm font-semibold text-neutral-900 dark:text-white">Unknown User</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {post.user?.id === currentUserId && (
@@ -107,8 +120,7 @@ export default function Post({
                                             onClick={() => { setShowMenu(false); onEdit(post); }}
                                             className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-neutral-700 rounded-md hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                                         >
-                                            <Pencil className="h-4 w-4" />
-                                            Edit
+                                            <Pencil className="h-4 w-4" /> Edit
                                         </button>
                                     )}
                                     {onDelete && (
@@ -116,8 +128,7 @@ export default function Post({
                                             onClick={() => { setShowMenu(false); onDelete(post.id); }}
                                             className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 rounded-md hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
                                         >
-                                            <Trash2 className="h-4 w-4" />
-                                            Delete
+                                            <Trash2 className="h-4 w-4" /> Delete
                                         </button>
                                     )}
                                 </div>
@@ -131,7 +142,6 @@ export default function Post({
                 )}
             </div>
 
-            {/* --- UPDATED CONTENT SECTION --- */}
             <div className="px-4 py-3">
                 <div className={`whitespace-pre-wrap text-sm leading-relaxed text-neutral-900 dark:text-neutral-100 ${!isExpanded ? 'line-clamp-3' : ''}`}>
                     {post.content}
@@ -146,7 +156,6 @@ export default function Post({
                     </button>
                 )}
             </div>
-            {/* ------------------------------- */}
 
             {post.image_url && (
                 <div className="cursor-pointer w-full bg-neutral-100 dark:bg-neutral-900" onClick={() => onClick(post.id)}>

@@ -243,7 +243,7 @@ export default function Show({
 
                     {postsState.length ? (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {postsState.map((post) => (
+                            {postsState.map((post: PostType) => (
                                 <Post
                                     key={post.id}
                                     post={post}
