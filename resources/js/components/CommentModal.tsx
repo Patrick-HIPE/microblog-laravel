@@ -158,18 +158,16 @@ export default function CommentModal({
                 className="flex flex-col w-full max-h-[90vh] max-w-lg sm:max-w-xl md:max-w-2xl mx-auto my-auto rounded-xl bg-white shadow-xl ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/10 animate-in fade-in zoom-in duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 rounded-t-xl dark:border-neutral-800 bg-white dark:bg-neutral-900 z-10">
                     <h3 className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">Comments</h3>
                     <button 
                         onClick={onClose}
-                        className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
                     >
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                {/* Comment List */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px]">
                     {activePost.comments && activePost.comments.length > 0 ? (
                         activePost.comments.map((comment, index) => {
@@ -278,7 +276,6 @@ export default function CommentModal({
                     )}
                 </div>
 
-                {/* Create Form */}
                 <form onSubmit={submitComment} className="border-t border-neutral-200 p-4 sm:p-5 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-b-xl z-20">
                     <div className="flex gap-3">
                         <div className="hidden sm:block flex-shrink-0">

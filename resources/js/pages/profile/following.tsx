@@ -32,7 +32,6 @@ export default function FollowingPage({ user, following, current_user_id }: Prop
     router.get(route('profile.show', { user: id }));
   };
 
-  // Build breadcrumbs dynamically
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Profile', href: route('profile.show', { user: user.id }) },
     { title: 'Following', href: '#' },

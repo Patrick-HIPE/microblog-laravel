@@ -9,7 +9,6 @@ interface PostProps {
     onComment: (post: PostType) => void;
     onClick: (postId: number) => void;
     onShare: (postId: number) => void;
-    // New props for the actions
     onEdit?: (post: PostType) => void;
     onDelete?: (postId: number) => void;
     children?: React.ReactNode;
@@ -27,9 +26,16 @@ export default function Post({
     children 
 }: PostProps) {
     const [showMenu, setShowMenu] = useState(false);
+    
+    // 1. New State for Text Expansion
+    const [isExpanded, setIsExpanded] = useState(false);
+    
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // Handle closing menu when clicking outside
+    // Threshold to decide when to show "See More" (e.g., 200 chars)
+    const CHAR_LIMIT = 200;
+    const isLongText = post.content.length > CHAR_LIMIT;
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (showMenu && menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -48,8 +54,14 @@ export default function Post({
         setShowMenu(!showMenu);
     };
 
+    const toggleExpand = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent navigating to post details
+        setIsExpanded(!isExpanded);
+    };
+
     return (
-        <div className="flex flex-col rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">            <div className="flex items-center justify-between px-4 pt-4">
+        <div className="flex flex-col rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="flex items-center justify-between px-4 pt-4">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
                         {post.user?.avatar ? (
@@ -119,14 +131,25 @@ export default function Post({
                 )}
             </div>
 
-            <div className="cursor-pointer px-4 py-3" onClick={() => onClick(post.id)}>
-                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-neutral-900 dark:text-neutral-100">
+            {/* --- UPDATED CONTENT SECTION --- */}
+            <div className="px-4 py-3">
+                <div className={`whitespace-pre-wrap text-sm leading-relaxed text-neutral-900 dark:text-neutral-100 ${!isExpanded ? 'line-clamp-3' : ''}`}>
                     {post.content}
-                </p>
+                </div>
+                
+                {isLongText && (
+                    <button 
+                        onClick={toggleExpand}
+                        className="mt-1 text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white cursor-pointer hover:underline"
+                    >
+                        {isExpanded ? 'See Less' : 'See More'}
+                    </button>
+                )}
             </div>
+            {/* ------------------------------- */}
 
             {post.image_url && (
-                <div className="cursor-pointer overflow-hidden bg-neutral-100 dark:bg-neutral-800" onClick={() => onClick(post.id)}>
+                <div className="cursor-pointer w-full bg-neutral-100 dark:bg-neutral-900" onClick={() => onClick(post.id)}>
                     <img src={post.image_url} alt="Post image" className="h-auto w-full object-cover" loading="lazy" />
                 </div>
             )}

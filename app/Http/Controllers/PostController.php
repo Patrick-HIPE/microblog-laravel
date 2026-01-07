@@ -40,11 +40,9 @@ class PostController extends Controller
                     'created_at' => $post->created_at,
                     'updated_at' => $post->updated_at,
                     
-                    // LIKES
                     'likes_count' => $post->likes->count(),
                     'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
                     
-                    // SHARES
                     'shares_count' => $post->shares->count(),
                     'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
 
@@ -52,7 +50,6 @@ class PostController extends Controller
                     'user' => [
                         'id' => $post->user->id,
                         'name' => $post->user->name,
-                        'avatar' => $post->user->avatar ?? null,
                     ],
                     'can' => [
                         'update' => $currentUser ? $currentUser->can('update', $post) : false,
@@ -66,7 +63,6 @@ class PostController extends Controller
                             'user' => [
                                 'id' => $comment->user->id,
                                 'name' => $comment->user->name,
-                                'avatar' => $comment->user->avatar ?? null,
                             ],
                         ];
                     }),
@@ -125,11 +121,9 @@ class PostController extends Controller
             'created_at' => $post->created_at,
             'updated_at' => $post->updated_at,
             
-            // LIKES
             'likes_count' => $post->likes->count(),
             'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
 
-            // SHARES
             'shares_count' => $post->shares->count(),
             'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
 
@@ -137,9 +131,7 @@ class PostController extends Controller
             'user' => [
                 'id' => $post->user->id,
                 'name' => $post->user->name,
-                'avatar' => $post->user->avatar ?? null,
             ],
-            // PERMISSIONS
             'can' => [
                 'update' => $currentUser ? $currentUser->can('update', $post) : false,
                 'delete' => $currentUser ? $currentUser->can('delete', $post) : false,
@@ -152,7 +144,6 @@ class PostController extends Controller
                     'user' => [
                         'id' => $comment->user->id,
                         'name' => $comment->user->name,
-                        'avatar' => $comment->user->avatar ?? null,
                     ],
                 ];
             }),

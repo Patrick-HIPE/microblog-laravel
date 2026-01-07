@@ -27,7 +27,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/posts/{post}/share', [PostController::class, 'share'])->name('posts.share');
     // Comment
     Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('comments.store');
-    Route::resource('comments', CommentController::class)->only(['update', 'destroy']);
+    Route::put('/comments/{comment}/', [CommentController::class, 'update'])->name('comments.update');
+    Route::delete('/comments/{comment}/', [CommentController::class, 'destroy'])->name('comments.destroy');
     // Profile
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/users/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])->name('users.toggle-follow');
