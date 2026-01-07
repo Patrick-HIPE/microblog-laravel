@@ -16,22 +16,54 @@ class DashboardController extends Controller
         $allowedUserIds = $followingIds->push($user->id);
 
         $posts = Post::whereIn('user_id', $allowedUserIds)
-            ->with(['user', 'comments.user'])
+            ->with([
+                'user:id,name,avatar',
+                'comments.user:id,name,avatar',
+                'likes' => function ($query) {
+                    $query->where('user_id', Auth::id());
+                },
+                'shares' => function ($query) {
+                    $query->where('user_id', Auth::id());
+                }
+            ])
             ->withCount(['likes', 'comments', 'shares']) 
-            ->with(['likes' => function ($query) {
-                $query->where('user_id', Auth::id());
-            }])
-            ->with(['shares' => function ($query) {
-                $query->where('user_id', Auth::id());
-            }])
             ->latest()
-            ->paginate(5);
+            ->paginate(10);
 
         $posts->getCollection()->transform(function ($post) {
-            $post->image_url = $post->image ? Storage::url($post->image) : null;
-            $post->liked_by_user = $post->likes->isNotEmpty();
-            $post->shared_by_user = $post->shares->isNotEmpty();
-            return $post;
+            return [
+                'id' => $post->id,
+                'content' => $post->content,
+                'image_url' => $post->image ? Storage::url($post->image) : null,
+                'created_at' => $post->created_at,
+                'updated_at' => $post->updated_at,
+                
+                'likes_count' => $post->likes_count,
+                'comments_count' => $post->comments_count,
+                'shares_count' => $post->shares_count,
+                
+                'liked_by_user' => $post->likes->isNotEmpty(),
+                'shared_by_user' => $post->shares->isNotEmpty(),
+                
+                'user' => [
+                    'id' => $post->user->id,
+                    'name' => $post->user->name,
+                    'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null,
+                ],
+                
+                'comments' => $post->comments->map(function ($comment) {
+                    return [
+                        'id' => $comment->id,
+                        'body' => $comment->body,
+                        'created_at' => $comment->created_at,
+                        'user' => [
+                            'id' => $comment->user->id,
+                            'name' => $comment->user->name,
+                            'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null,
+                        ],
+                    ];
+                }),
+            ];
         });
 
         return Inertia::render('dashboard', [

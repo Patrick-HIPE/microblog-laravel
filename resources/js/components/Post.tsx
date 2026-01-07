@@ -65,13 +65,19 @@ export default function Post({
                             className="flex items-center gap-3 group"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 transition-opacity group-hover:opacity-80 dark:bg-neutral-700">
+                            {/* Avatar Display */}
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 transition-opacity group-hover:opacity-80 dark:bg-neutral-700">
                                 {post.user.avatar ? (
-                                    <img src={post.user.avatar} alt={post.user.name} className="h-10 w-10 rounded-full object-cover" />
+                                    <img 
+                                        src={post.user.avatar} 
+                                        alt={post.user.name} 
+                                        className="h-full w-full object-cover" 
+                                    />
                                 ) : (
                                     <User className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
                                 )}
                             </div>
+                            
                             <div className="flex flex-col">
                                 <span className="text-sm font-semibold text-neutral-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                                     {post.user.name}

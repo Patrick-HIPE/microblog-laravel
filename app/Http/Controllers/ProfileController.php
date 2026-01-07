@@ -23,9 +23,9 @@ class ProfileController extends Controller
 
         $posts = $user->posts()
             ->with([
-                'user:id,name',
+                'user:id,name,avatar', 
                 'likes',
-                'comments.user:id,name',
+                'comments.user:id,name,avatar', 
                 'shares'
             ])
             ->latest()
@@ -43,10 +43,13 @@ class ProfileController extends Controller
                 'shares_count' => $post->shares->count(),
                 'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
                 'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
+                
                 'user' => [
                     'id' => $post->user->id,
                     'name' => $post->user->name,
+                    'avatar_url' => $post->user->avatar ? Storage::url($post->user->avatar) : null,
                 ],
+                
                 'comments' => $post->comments->map(function ($comment) {
                     return [
                         'id' => $comment->id,
@@ -55,12 +58,14 @@ class ProfileController extends Controller
                         'user' => [
                             'id' => $comment->user->id,
                             'name' => $comment->user->name,
-                            'avatar' => $comment->user->avatar ?? null,
+                            'avatar_url' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null,
                         ],
                     ];
                 }),
             ];
         });
+
+        $user->avatar_url = $user->avatar ? Storage::url($user->avatar) : null;
 
         return Inertia::render('profile/show', [
             'user' => $user->load('followers', 'following'),
@@ -102,6 +107,7 @@ class ProfileController extends Controller
                 'id' => $follower->id,
                 'name' => $follower->name,
                 'email' => $follower->email,
+                'avatar_url' => $follower->avatar ? Storage::url($follower->avatar) : null,
                 'user_is_followed' => $currentUser?->isFollowing($follower) ?? false,
             ];
         });
@@ -125,6 +131,7 @@ class ProfileController extends Controller
                 'id' => $followedUser->id,
                 'name' => $followedUser->name,
                 'email' => $followedUser->email,
+                'avatar_url' => $followedUser->avatar ? Storage::url($followedUser->avatar) : null,
                 'user_is_followed' => $currentUser?->isFollowing($followedUser) ?? false,
             ];
         });
