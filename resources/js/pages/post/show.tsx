@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, usePage } from '@inertiajs/react';
+// 1. Add Link to imports
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem, type Post as PostType, type User as UserType } from '@/types';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
@@ -116,27 +117,51 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                         </div>
                     )}
 
-                    <div className="p-6 md:p-4">
+                    <div className="p-4 md:p-4">
                         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                            
+                            {/* --- UPDATED USER SECTION START --- */}
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-100 ring-1 ring-neutral-200 dark:bg-neutral-800 dark:ring-neutral-700">
-                                    {currentPost.user?.avatar ? (
-                                        <img src={currentPost.user.avatar} alt={currentPost.user.name} className="h-full w-full object-cover" />
-                                    ) : (
-                                        <User className="h-5 w-5 text-neutral-400" />
-                                    )}
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">
-                                        {currentPost.user?.name || 'Unknown User'}
-                                    </span>
-                                    <span className="flex items-center gap-1 text-xs text-neutral-500">
-                                        {date}
-                                        <span className="text-neutral-300 dark:text-neutral-700">•</span>
-                                        {time}
-                                    </span>
-                                </div>
+                                {currentPost.user ? (
+                                    <Link 
+                                        href={route('profile.show', currentPost.user.id)}
+                                        className="flex items-center gap-3 group"
+                                    >
+                                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-100 ring-1 ring-neutral-200 transition-opacity group-hover:opacity-80 dark:bg-neutral-800 dark:ring-neutral-700">
+                                            {currentPost.user.avatar ? (
+                                                <img src={currentPost.user.avatar} alt={currentPost.user.name} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <User className="h-5 w-5 text-neutral-400" />
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold text-neutral-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+                                                {currentPost.user.name}
+                                            </span>
+                                            <span className="flex items-center gap-1 text-xs text-neutral-500">
+                                                {date}
+                                                <span className="text-neutral-300 dark:text-neutral-700">•</span>
+                                                {time}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                ) : (
+                                    <div className="flex items-center gap-3 opacity-50">
+                                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-100 ring-1 ring-neutral-200 dark:bg-neutral-800 dark:ring-neutral-700">
+                                            <User className="h-5 w-5 text-neutral-400" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold text-neutral-900 dark:text-white">
+                                                Unknown User
+                                            </span>
+                                            <span className="flex items-center gap-1 text-xs text-neutral-500">
+                                                {date}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
+                            {/* --- UPDATED USER SECTION END --- */}
 
                             <div className="flex items-center gap-2 self-end sm:self-auto">
                                 {currentPost.user?.id === currentUserId && (
@@ -180,7 +205,7 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                         </div>
                     </div>
 
-                    <div className="px-4 py-2 md:px-4 md:py-2">
+                    <div className="px-4 py-2 md:px-4 md:py-4">
                         <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900 dark:text-neutral-100">
                             {currentPost.content}
                         </p>
@@ -236,7 +261,6 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                             </button>
                         </div>
                     </div>
-
                 </div>
             </div>
 

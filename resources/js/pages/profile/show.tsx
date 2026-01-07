@@ -225,11 +225,11 @@ export default function Show({
                             {!isOwnProfile && (
                                 <Button
                                     onClick={handleFollow}
-                                    className={
+                                    className={`cursor-pointer ${
                                         isFollowed
                                             ? "bg-neutral-500 hover:bg-neutral-600"
                                             : "bg-blue-600 hover:bg-blue-700"
-                                    }
+                                    }`}
                                 >
                                     {isFollowed ? "Followed" : "Follow"}
                                 </Button>
@@ -239,7 +239,7 @@ export default function Show({
 
                     <hr />
 
-                    <h3 className="text-lg font-semibold">Posts</h3>
+                    <h3 className="text-lg font-semibold">Owned Posts</h3>
 
                     {postsState.length ? (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

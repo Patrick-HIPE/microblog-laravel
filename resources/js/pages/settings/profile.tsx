@@ -47,44 +47,47 @@ export default function Profile({
                             preserveScroll: true,
                         }}
                         className="space-y-6"
+                        noValidate
                     >
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
+                                    <Label htmlFor="name" className={errors.name ? "text-red-600" : ""}>
+                                        Name
+                                    </Label>
 
                                     <Input
                                         id="name"
-                                        className="mt-1 block w-full"
+                                        className={`mt-1 block w-full ${errors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                                         defaultValue={auth.user.name}
                                         name="name"
-                                        required
                                         autoComplete="name"
                                         placeholder="Full name"
                                     />
 
                                     <InputError
-                                        className="mt-2"
+                                        className="mt-2 text-red-600"
                                         message={errors.name}
                                     />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
+                                    <Label htmlFor="email" className={errors.email ? "text-red-600" : ""}>
+                                        Email address
+                                    </Label>
 
                                     <Input
                                         id="email"
                                         type="email"
-                                        className="mt-1 block w-full"
+                                        className={`mt-1 block w-full ${errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                                         defaultValue={auth.user.email}
                                         name="email"
-                                        required
                                         autoComplete="username"
                                         placeholder="Email address"
                                     />
 
                                     <InputError
-                                        className="mt-2"
+                                        className="mt-2 text-red-600"
                                         message={errors.email}
                                     />
                                 </div>
@@ -120,6 +123,7 @@ export default function Profile({
                                     <Button
                                         disabled={processing}
                                         data-test="update-profile-button"
+                                        className="cursor-pointer"
                                     >
                                         Save
                                     </Button>

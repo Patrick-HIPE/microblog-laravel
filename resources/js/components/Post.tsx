@@ -31,7 +31,7 @@ export default function Post({
     const [isExpanded, setIsExpanded] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const CHAR_LIMIT = 200;
+    const CHAR_LIMIT = 80;
     const isLongText = post.content.length > CHAR_LIMIT;
 
     useEffect(() => {
@@ -143,14 +143,18 @@ export default function Post({
             </div>
 
             <div className="px-4 py-3">
-                <div className={`whitespace-pre-wrap text-sm leading-relaxed text-neutral-900 dark:text-neutral-100 ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                <div 
+                    className={`whitespace-pre-wrap text-sm leading-relaxed text-neutral-900 dark:text-neutral-100 break-all
+                        ${!isExpanded ? 'line-clamp-1' : ''} 
+                    `}
+                >
                     {post.content}
                 </div>
                 
                 {isLongText && (
                     <button 
                         onClick={toggleExpand}
-                        className="mt-1 text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white cursor-pointer hover:underline"
+                        className="mt-1 text-xs font-medium text-neutral-500 hover:text-neutral-900 hover:underline dark:hover:text-white cursor-pointer"
                     >
                         {isExpanded ? 'See Less' : 'See More'}
                     </button>
