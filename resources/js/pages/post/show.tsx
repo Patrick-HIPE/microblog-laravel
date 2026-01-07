@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
-// 1. Add Link to imports
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem, type Post as PostType, type User as UserType } from '@/types';
@@ -120,7 +119,6 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                     <div className="p-4 md:p-4">
                         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                             
-                            {/* --- UPDATED USER SECTION START --- */}
                             <div className="flex items-center gap-3">
                                 {currentPost.user ? (
                                     <Link 
@@ -161,7 +159,6 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                                     </div>
                                 )}
                             </div>
-                            {/* --- UPDATED USER SECTION END --- */}
 
                             <div className="flex items-center gap-2 self-end sm:self-auto">
                                 {currentPost.user?.id === currentUserId && (

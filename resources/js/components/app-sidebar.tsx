@@ -11,13 +11,13 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BookOpen, Folder, LayoutGrid, House, CircleUserRound } from "lucide-react";
+import { LayoutGrid, House, CircleUserRound } from "lucide-react";
 import AppLogo from "./app-logo";
 import { dashboard } from "@/routes";
-import { type NavItem } from "@/types";
+import { type NavItem, type SharedData } from "@/types";
 
 export function AppSidebar() {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage<SharedData>().props;
     const userId = auth?.user?.id;
 
     const mainNavItems: NavItem[] = [
@@ -54,7 +54,8 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser {...({ name: auth?.user?.name, profileHref: userId ? `/profile/${userId}` : "#" } as any)} />
+                
+                {auth.user && <NavUser />}
             </SidebarFooter>
         </Sidebar>
     );

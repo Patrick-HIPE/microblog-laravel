@@ -62,8 +62,6 @@ export function GlobalSearch() {
 
     useEffect(() => {
         if (!query) {
-            setResults({ users: [] });
-            setOpenDropdown(false);
             return;
         }
 
@@ -84,15 +82,25 @@ export function GlobalSearch() {
         return () => clearTimeout(delayDebounceFn);
     }, [query]);
 
+    const handleQueryChange = (value: string) => {
+        setQuery(value);
+        if (!value) {
+            setResults({ users: [] });
+            setOpenDropdown(false);
+        }
+    };
+
     const handleSelectUser = (id: number) => {
         setOpenDialog(false);
         setOpenDropdown(false);
         setQuery("");
+        setResults({ users: [] });
         router.visit(route('profile.show', id));
     };
 
     const clearSearch = () => {
         setQuery("");
+        setResults({ users: [] });
         setOpenDropdown(false);
         const input = document.querySelector('#global-search-input') as HTMLInputElement;
         input?.focus();
@@ -122,7 +130,7 @@ export function GlobalSearch() {
                         placeholder="Search users..."
                         className="pl-9 pr-9 bg-muted/50 focus:bg-background transition-colors"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => handleQueryChange(e.target.value)}
                         onFocus={() => { if (query) setOpenDropdown(true); }}
                         autoComplete="off"
                     />
@@ -185,7 +193,7 @@ export function GlobalSearch() {
                 <CommandInput 
                     placeholder="Search users..." 
                     value={query}
-                    onValueChange={setQuery}
+                    onValueChange={handleQueryChange}
                 />
                 <CommandList>
                     {loading && (

@@ -10,19 +10,24 @@ interface FlashMessageData {
 
 export default function FlashMessage() {
     const { flash } = usePage<{ flash: FlashMessageData }>().props;
+    
+    const [prevFlash, setPrevFlash] = useState(flash);
     const [isVisible, setIsVisible] = useState(false);
 
+    if (flash !== prevFlash) {
+        setPrevFlash(flash);
+        setIsVisible(!!(flash.message || flash.success || flash.error));
+    }
+
     useEffect(() => {
-        if (flash.message || flash.success || flash.error) {
-            setIsVisible(true);
-            
+        if (isVisible) {
             const timer = setTimeout(() => {
                 setIsVisible(false);
             }, 5000);
 
             return () => clearTimeout(timer);
         }
-    }, [flash]);
+    }, [isVisible]);
 
     if (!isVisible) return null;
 

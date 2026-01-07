@@ -35,7 +35,6 @@ export default function CommentModal({
         body: '',
     });
 
-    // Handle closing menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (openMenuId !== null && menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -52,15 +51,14 @@ export default function CommentModal({
         };
     }, [openMenuId, isOpen]);
 
-    useEffect(() => {
-        if (isOpen) {
-            reset();
-            clearErrors();
-            setEditingCommentId(null);
-            setOpenMenuId(null);
-            editCommentForm.reset();
-        }
-    }, [isOpen]);
+    const handleClose = () => {
+        reset();
+        clearErrors();
+        editCommentForm.reset();
+        setEditingCommentId(null);
+        setOpenMenuId(null);
+        onClose();
+    };
 
     if (!isOpen || !activePost) return null;
 
@@ -152,7 +150,7 @@ export default function CommentModal({
     return (
         <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 md:p-8 backdrop-blur-sm transition-opacity overflow-y-auto"
-            onClick={onClose}
+            onClick={handleClose} 
         >
             <div 
                 className="flex flex-col w-full max-h-[90vh] max-w-lg sm:max-w-xl md:max-w-2xl mx-auto my-auto rounded-xl bg-white shadow-xl ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/10 animate-in fade-in zoom-in duration-200"
@@ -161,7 +159,7 @@ export default function CommentModal({
                 <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 rounded-t-xl dark:border-neutral-800 bg-white dark:bg-neutral-900 z-10">
                     <h3 className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-white">Comments</h3>
                     <button 
-                        onClick={onClose}
+                        onClick={handleClose} 
                         className="rounded-full p-1.5 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
                     >
                         <X className="h-5 w-5" />

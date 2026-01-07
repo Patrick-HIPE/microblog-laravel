@@ -35,26 +35,30 @@ export default function Update({ post }: Props) {
   const [imagePreview, setImagePreview] = useState<string | null>(post.image_url || null);
 
   useEffect(() => {
-    if (data.image instanceof File) {
-      const url = URL.createObjectURL(data.image);
-      setImagePreview(url);
-      return () => URL.revokeObjectURL(url);
-    } else if (data.removeImage) {
-      setImagePreview(null);
-    } else {
-      setImagePreview(post.image_url ?? null);
-    }
-  }, [data.image, data.removeImage, post.image_url]);
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     setData('image', file);
     setData('removeImage', false);
+
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
+    } else {
+      setImagePreview(post.image_url ?? null);
+    }
   }
 
   function handleRemoveImage() {
     setData('image', null);
     setData('removeImage', true);
+    setImagePreview(null);
   }
 
   function handleSubmit(e: React.FormEvent) {

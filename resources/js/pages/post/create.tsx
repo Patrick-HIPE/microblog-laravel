@@ -26,18 +26,23 @@ export default function Create() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (data.image) {
-            const url = URL.createObjectURL(data.image);
-            setImagePreview(url);
-            return () => URL.revokeObjectURL(url);
-        } else {
-            setImagePreview(null);
-        }
-    }, [data.image]);
+        return () => {
+            if (imagePreview) {
+                URL.revokeObjectURL(imagePreview);
+            }
+        };
+    }, [imagePreview]);
 
     function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0] ?? null;
         setData('image', file);
+
+        if (file) {
+            const url = URL.createObjectURL(file);
+            setImagePreview(url);
+        } else {
+            setImagePreview(null);
+        }
     }
 
     function handleRemoveImage() {
@@ -77,7 +82,6 @@ export default function Create() {
                             {errors.content && <p className="text-sm text-red-500">{errors.content}</p>}
                         </div>
 
-                        {/* Image Upload */}
                         <div className="space-y-2">
                             <Label htmlFor="image">Image</Label>
                             <Input
@@ -90,7 +94,6 @@ export default function Create() {
                             />
                             {errors.image && <p className="text-sm text-red-500">{errors.image}</p>}
 
-                            {/* Image Preview with Remove Button */}
                             {imagePreview && (
                                 <div className="relative mt-2">
                                     <img
