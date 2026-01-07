@@ -8,18 +8,41 @@ import CommentModal from '@/components/CommentModal';
 import Post from '@/components/Post';
 import { useState } from 'react';
 
+// Import ShadCN Pagination
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'My Posts', href: route('posts.index') },
 ];
 
+interface PaginationMeta {
+    data: PostType[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    next_page_url: string | null;
+    prev_page_url: string | null;
+}
+
 interface Props {
-    posts: PostType[];
+    posts: PaginationMeta;
     current_user_id: number;
 }
 
-export default function Index({ posts: initialPosts, current_user_id }: Props) {
-    const [posts, setPosts] = useState(
-        initialPosts.map((p) => ({
+export default function Index({ posts, current_user_id }: Props) {
+    
+    // Helper to normalize post structure
+    const normalizePosts = (rawPosts: PostType[]) => {
+        return rawPosts.map((p) => ({
             ...p,
             updated_at: p.updated_at || p.created_at,
             likes_count: p.likes_count ?? 0,
@@ -27,8 +50,17 @@ export default function Index({ posts: initialPosts, current_user_id }: Props) {
             shares_count: p.shares_count ?? 0,
             liked_by_user: p.liked_by_user ?? false,
             user: p.user ?? { id: 0, name: 'Unknown User' },
-        }))
-    );
+        }));
+    };
+
+    // Derived State Pattern to avoid useEffect double-render
+    const [prevPostsData, setPrevPostsData] = useState(posts.data);
+    const [postsState, setPosts] = useState<PostType[]>(normalizePosts(posts.data));
+
+    if (posts.data !== prevPostsData) {
+        setPrevPostsData(posts.data);
+        setPosts(normalizePosts(posts.data));
+    }
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
@@ -126,6 +158,58 @@ export default function Index({ posts: initialPosts, current_user_id }: Props) {
         });
     };
 
+    // Pagination Logic
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > posts.last_page || page === posts.current_page) return;
+        
+        router.get(window.location.pathname, { page }, {
+            preserveState: true,
+            preserveScroll: true, 
+        });
+    };
+
+    const renderPaginationItems = () => {
+        const items = [];
+        const maxVisiblePages = 5;
+        const { current_page, last_page } = posts;
+
+        if (last_page <= maxVisiblePages) {
+            for (let i = 1; i <= last_page; i++) items.push(i);
+        } else {
+            items.push(1);
+            if (current_page > 3) items.push('ellipsis-start');
+            const start = Math.max(2, current_page - 1);
+            const end = Math.min(last_page - 1, current_page + 1);
+            for (let i = start; i <= end; i++) items.push(i);
+            if (current_page < last_page - 2) items.push('ellipsis-end');
+            items.push(last_page);
+        }
+
+        return items.map((item, index) => {
+            if (typeof item === 'number') {
+                return (
+                    <PaginationItem key={index}>
+                        <PaginationLink
+                            href="#"
+                            isActive={item === posts.current_page}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(item);
+                            }}
+                        >
+                            {item}
+                        </PaginationLink>
+                    </PaginationItem>
+                );
+            }
+            return (
+                <PaginationItem key={index}>
+                    <PaginationEllipsis />
+                </PaginationItem>
+            );
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="My Posts" />
@@ -140,22 +224,54 @@ export default function Index({ posts: initialPosts, current_user_id }: Props) {
                         </Link>
                     </div>
 
-                    {posts.length ? (
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {posts.map((post) => (
-                                <Post
-                                    key={post.id}
-                                    post={post}
-                                    currentUserId={current_user_id}
-                                    onClick={handlePostClick}
-                                    onLike={handleLike}
-                                    onComment={openCommentModal}
-                                    onShare={handleShare}
-                                    onEdit={handleEdit}
-                                    onDelete={handleDelete}
-                                />
-                            ))}
-                        </div>
+                    {postsState.length ? (
+                        <>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                {postsState.map((post) => (
+                                    <Post
+                                        key={post.id}
+                                        post={post}
+                                        currentUserId={current_user_id}
+                                        onClick={handlePostClick}
+                                        onLike={handleLike}
+                                        onComment={openCommentModal}
+                                        onShare={handleShare}
+                                        onEdit={handleEdit}
+                                        onDelete={handleDelete}
+                                    />
+                                ))}
+                            </div>
+
+                            <div className="py-4 mt-4">
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious 
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handlePageChange(posts.current_page - 1);
+                                                }}
+                                                className={posts.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+
+                                        {renderPaginationItems()}
+
+                                        <PaginationItem>
+                                            <PaginationNext 
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handlePageChange(posts.current_page + 1);
+                                                }}
+                                                className={posts.current_page >= posts.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                            </div>
+                        </>
                     ) : (
                         <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
                             <div className="mb-4 rounded-full bg-neutral-100 p-3 dark:bg-neutral-800">

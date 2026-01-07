@@ -29,7 +29,7 @@ class ProfileController extends Controller
                 'shares'
             ])
             ->latest()
-            ->paginate(10); 
+            ->paginate(6); 
 
         $posts->getCollection()->transform(function ($post) use ($currentUser) {
             return [
