@@ -25,13 +25,13 @@ class PostController extends Controller
 
         $posts = Post::where('user_id', $currentUser->id)
             ->with([
-                'user:id,name',
+                'user:id,name,avatar', // Added avatar
                 'likes',
                 'shares', 
-                'comments.user:id,name'
+                'comments.user:id,name,avatar' // Added avatar
             ])
             ->latest() 
-            ->paginate(6); 
+            ->paginate(10); 
 
         $posts->getCollection()->transform(function ($post) use ($currentUser) {
             return [
@@ -51,6 +51,7 @@ class PostController extends Controller
                 'user' => [
                     'id' => $post->user->id,
                     'name' => $post->user->name,
+                    'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null, // Transform URL
                 ],
                 'can' => [
                     'update' => $currentUser ? $currentUser->can('update', $post) : false,
@@ -64,6 +65,7 @@ class PostController extends Controller
                         'user' => [
                             'id' => $comment->user->id,
                             'name' => $comment->user->name,
+                            'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null, // Transform URL
                         ],
                     ];
                 }),
@@ -76,17 +78,12 @@ class PostController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new post.
-     */
+    // ... create, store methods remain unchanged ...
     public function create()
     {
         return Inertia::render('post/create');
     }
 
-    /**
-     * Store a newly created post in storage.
-     */
     public function store(StorePostRequest $request)
     {
         $data = $request->validated();
@@ -109,10 +106,10 @@ class PostController extends Controller
         $currentUser = Auth::user();
 
         $post->load([
-            'user:id,name',
+            'user:id,name,avatar', // Added avatar
             'likes',
             'shares',
-            'comments.user:id,name'
+            'comments.user:id,name,avatar' // Added avatar
         ]);
 
         $data = [
@@ -132,6 +129,7 @@ class PostController extends Controller
             'user' => [
                 'id' => $post->user->id,
                 'name' => $post->user->name,
+                'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null, // Transform URL
             ],
             'can' => [
                 'update' => $currentUser ? $currentUser->can('update', $post) : false,
@@ -145,6 +143,7 @@ class PostController extends Controller
                     'user' => [
                         'id' => $comment->user->id,
                         'name' => $comment->user->name,
+                        'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null, // Transform URL
                     ],
                 ];
             }),
@@ -156,27 +155,17 @@ class PostController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing a post.
-     */
+    // ... rest of the controller (edit, update, destroy, like, share) remains unchanged
     public function edit(Post $post)
     {
         $this->authorize('update', $post);
-
         $post->image_url = $post->image ? Storage::url($post->image) : null;
-
-        return Inertia::render('post/edit', [
-            'post' => $post,
-        ]);
+        return Inertia::render('post/edit', [ 'post' => $post ]);
     }
 
-    /**
-     * Update the specified post in storage.
-     */
     public function update(UpdatePostRequest $request, Post $post)
     {
         $this->authorize('update', $post);
-
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
@@ -194,82 +183,52 @@ class PostController extends Controller
         }
 
         unset($data['_method'], $data['removeImage']);
-
         $post->update($data);
 
         return redirect()->route('posts.index')->with('message', 'Post updated successfully!');
     }
 
-    /**
-     * Remove the specified post from storage.
-     */
     public function destroy(Post $post)
     {
         $this->authorize('delete', $post);
-
         if ($post->image) {
             Storage::disk('public')->delete($post->image);
         }
-
         $post->delete();
-
         return redirect()->route('posts.index')->with('message', 'Post deleted successfully!');
     }
 
-    /**
-     * Toggle Like
-     */
     public function like(Post $post)
     {
         $user = Auth::user();
+        if (!$user) abort(403, 'You must be logged in to like a post.');
 
-        if (!$user) {
-            abort(403, 'You must be logged in to like a post.');
-        }
-
-        $like = Like::where('user_id', $user->id)
-                    ->where('post_id', $post->id)
-                    ->first();
+        $like = Like::where('user_id', $user->id)->where('post_id', $post->id)->first();
 
         if ($like) {
             $like->delete();
             $message = 'You unliked the post.';
         } else {
-            Like::create([
-                'user_id' => $user->id,
-                'post_id' => $post->id,
-            ]);
+            Like::create(['user_id' => $user->id, 'post_id' => $post->id]);
             $message = 'You liked the post.';
         }
-
         return back()->with('success', $message);
     }
 
-    /**
-     * Toggle Share
-     */
     public function share(Post $post)
     {
         $user = Auth::user();
+        if (!$user) abort(403, 'You must be logged in to share a post.');
 
-        if (!$user) {
-            abort(403, 'You must be logged in to share a post.');
-        }
-
-        $existingShare = $post->shares()
-                              ->where('user_id', $user->id)
-                              ->first();
+        $existingShare = $post->shares()->where('user_id', $user->id)->first();
 
         if ($existingShare) {
             $existingShare->delete();
             $message = 'You unshared the post.';
         } else {
-            $post->shares()->create([
-                'user_id' => $user->id,
-            ]);
+            $post->shares()->create(['user_id' => $user->id]);
             $message = 'You shared the post.';
         }
-
         return back()->with('success', $message);
     }
 }
