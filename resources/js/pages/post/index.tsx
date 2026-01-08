@@ -35,7 +35,6 @@ interface PaginationMeta {
 
 interface Props {
     posts: PaginationMeta;
-    // Removed current_user_id as we will use auth.user
 }
 
 interface PageProps {
@@ -46,7 +45,7 @@ interface PageProps {
 }
 
 export default function Index({ posts }: Props) {
-    const { auth } = usePage<PageProps>().props; // Get auth data directly
+    const { auth } = usePage<PageProps>().props; 
     
     const normalizePosts = (rawPosts: PostType[]) => {
         return rawPosts.map((p) => ({

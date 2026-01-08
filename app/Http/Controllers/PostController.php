@@ -25,13 +25,13 @@ class PostController extends Controller
 
         $posts = Post::where('user_id', $currentUser->id)
             ->with([
-                'user:id,name,avatar', // Added avatar
+                'user:id,name,avatar',
                 'likes',
                 'shares', 
-                'comments.user:id,name,avatar' // Added avatar
+                'comments.user:id,name,avatar'
             ])
             ->latest() 
-            ->paginate(10); 
+            ->paginate(6); 
 
         $posts->getCollection()->transform(function ($post) use ($currentUser) {
             return [
@@ -78,7 +78,6 @@ class PostController extends Controller
         ]);
     }
 
-    // ... create, store methods remain unchanged ...
     public function create()
     {
         return Inertia::render('post/create');
@@ -106,10 +105,10 @@ class PostController extends Controller
         $currentUser = Auth::user();
 
         $post->load([
-            'user:id,name,avatar', // Added avatar
+            'user:id,name,avatar', 
             'likes',
             'shares',
-            'comments.user:id,name,avatar' // Added avatar
+            'comments.user:id,name,avatar'
         ]);
 
         $data = [

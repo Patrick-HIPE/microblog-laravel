@@ -85,7 +85,7 @@ export default function FollowersPage({ user, followers, current_user_id }: Prop
                           : "bg-blue-600 text-white hover:bg-blue-700"
                       }`}
                     >
-                      {follower.user_is_followed ? "Followed" : "Follow"}
+                      {follower.user_is_followed ? "Following" : "Follow"}
                     </button>
                   )}
                 </div>

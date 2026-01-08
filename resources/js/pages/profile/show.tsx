@@ -2,7 +2,7 @@ import AppLayout from "@/layouts/app-layout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { User as UserIcon } from "lucide-react";
 import { BreadcrumbItem, Post as PostType } from "@/types";
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react"; 
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import Post from "@/components/Post";
@@ -56,7 +56,7 @@ interface PageProps {
         user: {
             id: number;
             name: string;
-            avatar?: string; // Ensure this is defined
+            avatar?: string;
         };
     };
     [key: string]: unknown;
@@ -276,14 +276,14 @@ export default function Show({
                                 className="cursor-pointer"
                                 onClick={() => router.get(route("profile.followers", { user: user.id }))}
                             >
-                                Followers ({user.followers.length})
+                                followers ({user.followers.length})
                             </Button>
 
                             <Button
                                 className="cursor-pointer"
                                 onClick={() => router.get(route("profile.following", { user: user.id }))}
                             >
-                                Following ({user.following.length})
+                                following ({user.following.length})
                             </Button>
 
                             {!isOwnProfile && (
@@ -295,7 +295,7 @@ export default function Show({
                                             : "bg-blue-600 hover:bg-blue-700"
                                     }`}
                                 >
-                                    {isFollowed ? "Followed" : "Follow"}
+                                    {isFollowed ? "Following" : "Follow"}
                                 </Button>
                             )}
                         </div>
@@ -312,7 +312,7 @@ export default function Show({
                                     <Post
                                         key={post.id}
                                         post={post}
-                                        currentUserId={auth.user.id} // Use auth.user.id
+                                        currentUserId={auth.user.id}
                                         onClick={handlePostClick}
                                         onLike={handleLike}
                                         onComment={openCommentModal}
