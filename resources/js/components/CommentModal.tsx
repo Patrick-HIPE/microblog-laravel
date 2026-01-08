@@ -27,7 +27,7 @@ export default function CommentModal({
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const { data, setData, post: submitCreate, processing, reset, clearErrors } = useForm({
+    const { data, setData, post: submitCreate, processing, reset, clearErrors, errors } = useForm({
         body: '',
     });
 
@@ -55,6 +55,7 @@ export default function CommentModal({
         reset();
         clearErrors();
         editCommentForm.reset();
+        editCommentForm.clearErrors();
         setEditingCommentId(null);
         setOpenMenuId(null);
         onClose();
@@ -70,12 +71,14 @@ export default function CommentModal({
     const startEditing = (comment: Comment) => {
         setEditingCommentId(comment.id);
         editCommentForm.setData('body', comment.body);
+        editCommentForm.clearErrors(); 
         setOpenMenuId(null);
     };
 
     const cancelEditing = () => {
         setEditingCommentId(null);
         editCommentForm.reset();
+        editCommentForm.clearErrors();
     };
 
     const submitComment = (e: React.FormEvent) => {
@@ -188,11 +191,23 @@ export default function CommentModal({
                                             <form onSubmit={(e) => submitEditComment(e, comment.id)} className="w-full animate-in fade-in duration-200">
                                                 <textarea
                                                     value={editCommentForm.data.body}
-                                                    onChange={(e) => editCommentForm.setData('body', e.target.value)}
-                                                    className="w-full resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-black focus:ring-black dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
+                                                    onChange={(e) => {
+                                                        editCommentForm.setData('body', e.target.value);
+                                                        editCommentForm.clearErrors('body');
+                                                    }}
+                                                    className={`w-full resize-none rounded-lg border bg-white px-3 py-2 text-sm dark:bg-neutral-800 dark:text-white
+                                                        ${editCommentForm.errors.body 
+                                                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                                                            : 'border-neutral-300 focus:border-black focus:ring-black dark:border-neutral-600'
+                                                        }
+                                                    `}
                                                     rows={2}
                                                     autoFocus
                                                 />
+                                                {editCommentForm.errors.body && (
+                                                    <p className="mt-1 text-xs text-red-500">{editCommentForm.errors.body}</p>
+                                                )}
+
                                                 <div className="flex gap-2 mt-2">
                                                     <button
                                                         type="submit"
@@ -289,11 +304,25 @@ export default function CommentModal({
                             <textarea
                                 rows={1}
                                 value={data.body}
-                                onChange={(e) => setData('body', e.target.value)}
+                                onChange={(e) => {
+                                    setData('body', e.target.value);
+                                    if (errors.body) clearErrors('body');
+                                }}
                                 placeholder="Add a comment..."
-                                className="w-full resize-none rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2.5 text-sm focus:border-black focus:ring-black dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:focus:border-white dark:focus:ring-white min-h-[44px]"
+                                className={`w-full resize-none rounded-lg border bg-neutral-50 px-3 py-2.5 text-sm dark:bg-neutral-800 dark:text-white min-h-[44px]
+                                    ${errors.body 
+                                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                                        : 'border-neutral-300 focus:border-black focus:ring-black dark:border-neutral-700 dark:focus:border-white dark:focus:ring-white'
+                                    }
+                                `}
                                 required
                             />
+                            {errors.body && (
+                                <p className="mt-1 text-xs text-red-500 animate-in fade-in slide-in-from-top-1">
+                                    {errors.body}
+                                </p>
+                            )}
+
                             {data.body.trim().length > 0 && (
                                 <div className="mt-2 flex justify-end gap-2 animate-in fade-in slide-in-from-top-1">
                                     <button
