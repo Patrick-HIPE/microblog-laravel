@@ -2,7 +2,7 @@ import AppLayout from "@/layouts/app-layout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { User as UserIcon } from "lucide-react";
 import { BreadcrumbItem, Post as PostType } from "@/types";
-import { useState, useEffect } from "react"; 
+import { useState } from "react"; 
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import Post from "@/components/Post";

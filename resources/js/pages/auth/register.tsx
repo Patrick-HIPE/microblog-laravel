@@ -31,7 +31,6 @@ export default function Register() {
                                 <Input
                                     id="name"
                                     type="text"
-                                    required
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="name"
@@ -49,7 +48,6 @@ export default function Register() {
                                 <Input
                                     id="email"
                                     type="email"
-                                    required
                                     tabIndex={2}
                                     autoComplete="email"
                                     name="email"
@@ -63,7 +61,6 @@ export default function Register() {
                                 <Input
                                     id="password"
                                     type="password"
-                                    required
                                     tabIndex={3}
                                     autoComplete="new-password"
                                     name="password"
@@ -79,7 +76,6 @@ export default function Register() {
                                 <Input
                                     id="password_confirmation"
                                     type="password"
-                                    required
                                     tabIndex={4}
                                     autoComplete="new-password"
                                     name="password_confirmation"

@@ -28,7 +28,7 @@ class DashboardController extends Controller
             ])
             ->withCount(['likes', 'comments', 'shares']) 
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
 
         $posts->getCollection()->transform(function ($post) {
             return [
