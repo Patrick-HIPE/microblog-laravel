@@ -25,7 +25,7 @@ class ProfileController extends Controller
             'user' => [
                 'name' => $request->user()->name,
                 'email' => $request->user()->email,
-                'avatar_url' => $request->user()->avatar ? Storage::url($request->user()->avatar) : null,
+                'avatar' => $request->user()->avatar ? Storage::url($request->user()->avatar) : null,
             ]
         ]);
     }

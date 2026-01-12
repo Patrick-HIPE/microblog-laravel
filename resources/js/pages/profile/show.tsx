@@ -251,8 +251,10 @@ export default function Show({
             <Head title={user.name} />
             <FlashMessage />
 
+            {/* Main Wrapper with equal padding (p-6) */}
             <div className="p-6">
-                <div className="flex flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+                <div className="flex flex-col gap-6 rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                    {/* User Header Section */}
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             {user.avatar ? (
@@ -307,7 +309,7 @@ export default function Show({
                         </div>
                     </div>
 
-                    <hr />
+                    <hr className="border-neutral-200 dark:border-neutral-800" />
 
                     <h3 className="text-lg font-semibold">Posts</h3>
 
@@ -315,21 +317,22 @@ export default function Show({
                         <>
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 {postsState.map((post: PostType) => (
-                                    <Post
-                                        key={post.id}
-                                        post={post}
-                                        currentUserId={auth.user.id}
-                                        onClick={handlePostClick}
-                                        onLike={handleLike}
-                                        onComment={openCommentModal}
-                                        onShare={handleShare}
-                                        onEdit={handleEdit}
-                                        onDelete={handleDelete}
-                                    />
+                                    <div key={post.id} className="h-full">
+                                        <Post
+                                            post={post}
+                                            currentUserId={auth.user.id}
+                                            onClick={handlePostClick}
+                                            onLike={handleLike}
+                                            onComment={openCommentModal}
+                                            onShare={handleShare}
+                                            onEdit={handleEdit}
+                                            onDelete={handleDelete}
+                                        />
+                                    </div>
                                 ))}
                             </div>
 
-                            <div className="py-4 mt-4">
+                            <div className="pt-2">
                                 <Pagination>
                                     <PaginationContent>
                                         <PaginationItem>

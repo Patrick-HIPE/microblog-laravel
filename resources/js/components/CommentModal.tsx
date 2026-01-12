@@ -1,8 +1,9 @@
 import { useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { X, User, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Post, Comment, User as UserType } from '@/types';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CommentModalProps {
     isOpen: boolean;
@@ -27,6 +28,7 @@ export default function CommentModal({
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
     const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
+    const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     const { data, setData, post: submitCreate, processing, reset, clearErrors, errors } = useForm({
         body: '',
@@ -35,6 +37,15 @@ export default function CommentModal({
     const editCommentForm = useForm({
         body: '',
     });
+
+    useLayoutEffect(() => {
+        if (editingCommentId !== null && editTextareaRef.current) {
+            const textarea = editTextareaRef.current;
+            const length = textarea.value.length;
+            textarea.setSelectionRange(length, length);
+            textarea.focus();
+        }
+    }, [editingCommentId]); 
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -219,19 +230,20 @@ export default function CommentModal({
                                     </div>
                                 </div>
 
-                                <div className="flex-1 relative">
+                                <div className="flex-1 relative min-w-0">
                                     {editingCommentId === comment.id ? (
                                         <form onSubmit={(e) => submitEditComment(e, comment.id)} className="w-full animate-in fade-in duration-200">
-                                            <textarea
+                                            <Textarea
+                                                ref={editTextareaRef} 
                                                 value={editCommentForm.data.body}
                                                 onChange={(e) => {
                                                     editCommentForm.setData('body', e.target.value);
                                                     editCommentForm.clearErrors('body');
                                                 }}
-                                                className={`w-full resize-none rounded-lg border bg-white px-3 py-2 text-sm dark:bg-neutral-800 dark:text-white
+                                                className={`w-full resize-none min-h-[60px]
                                                     ${editCommentForm.errors.body 
-                                                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
-                                                        : 'border-neutral-300 focus:border-black focus:ring-black dark:border-neutral-600'
+                                                        ? 'border-red-500 focus-visible:ring-red-500' 
+                                                        : ''
                                                     }
                                                 `}
                                                 rows={2}
@@ -266,7 +278,9 @@ export default function CommentModal({
                                                 </span>
                                                 <span className="text-xs text-neutral-500">{new Date(comment.created_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
                                             </div>
-                                            <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">{comment.body}</p>
+                                            <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap break-words break-all leading-relaxed">
+                                                {comment.body}
+                                            </p>
 
                                             {currentUser.id === comment.user.id && (
                                                 <div className="absolute bottom-2 right-2">
@@ -297,7 +311,7 @@ export default function CommentModal({
 
                 <form onSubmit={submitComment} className="border-t border-neutral-200 p-4 sm:p-5 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-b-xl z-10 shrink-0">
                     <div className="flex gap-3">
-                        <div className="hidden sm:block flex-shrink-0">
+                        <div className="flex-shrink-0">
                              <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center dark:bg-neutral-800">
                                 {currentUser.avatar ? (
                                     <img src={currentUser.avatar} alt={currentUser.name} className="h-8 w-8 rounded-full object-cover" />
@@ -307,7 +321,7 @@ export default function CommentModal({
                             </div>
                         </div>
                         <div className="flex-1">
-                            <textarea
+                            <Textarea
                                 rows={1}
                                 value={data.body}
                                 onChange={(e) => {
@@ -315,10 +329,10 @@ export default function CommentModal({
                                     if (errors.body) clearErrors('body');
                                 }}
                                 placeholder="Add a comment..."
-                                className={`w-full resize-none rounded-lg border bg-neutral-50 px-3 py-2.5 text-sm dark:bg-neutral-800 dark:text-white min-h-[44px]
+                                className={`w-full resize-none min-h-[44px]
                                     ${errors.body 
-                                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
-                                        : 'border-neutral-300 focus:border-black focus:ring-black dark:border-neutral-700 dark:focus:border-white dark:focus:ring-white'
+                                        ? 'border-red-500 focus-visible:ring-red-500' 
+                                        : ''
                                     }
                                 `}
                                 required

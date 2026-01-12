@@ -45,7 +45,12 @@ export interface User {
 export interface User {
     id: number;
     name: string;
-    avatar?: string;
+    email: string;
+    created_at: string;
+    updated_at: string;
+    avatar?: string | null;
+    followers: { id: number }[];
+    following: { id: number }[];
 }
 
 export interface Comment {

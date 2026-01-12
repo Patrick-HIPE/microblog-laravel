@@ -59,7 +59,6 @@ export default function Post({
 
     return (
         <div className="flex flex-col rounded-xl border border-gray-100 bg-white shadow-sm transition-all dark:border-neutral-800 dark:bg-neutral-900">
-            {/* Header */}
             <div className="flex items-start justify-between px-4 pt-4">
                 <div className="flex items-center gap-3">
                     {post.user ? (
@@ -68,7 +67,6 @@ export default function Post({
                             className="flex items-center gap-3 group"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Avatar */}
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-neutral-800">
                                 {post.user.avatar ? (
                                     <img 
@@ -104,7 +102,6 @@ export default function Post({
                     )}
                 </div>
 
-                {/* Dropdown Menu */}
                 <div className="relative">
                     <button 
                         onClick={toggleMenu}
@@ -149,7 +146,6 @@ export default function Post({
                 </div>
             </div>
 
-            {/* Content */}
             <div className="px-4 py-3">
                 <div 
                     className={`whitespace-pre-wrap text-sm leading-relaxed text-gray-800 dark:text-gray-200 break-words
@@ -169,14 +165,12 @@ export default function Post({
                 )}
             </div>
 
-            {/* Image Attachment */}
             {post.image_url && (
                 <div className="cursor-pointer w-full bg-gray-50 dark:bg-black/50 border-y border-gray-100 dark:border-neutral-800" onClick={() => onClick(post.id)}>
                     <img src={post.image_url} alt="Post content" className="max-h-[500px] w-full object-contain mx-auto" loading="lazy" />
                 </div>
             )}
 
-            {/* Stats Bar */}
             <div className="mx-4 mt-3 flex items-center justify-between border-b border-gray-100 pb-3 text-xs text-gray-500 dark:border-neutral-800 dark:text-neutral-400 font-medium">
                 <div className="flex items-center gap-1.5 min-h-[20px]">
                     {post.likes_count > 0 && (

@@ -7,7 +7,7 @@ import FlashMessage from '@/components/flash-message';
 import CommentModal from '@/components/CommentModal';
 import Post from '@/components/Post';
 import { useState, useEffect } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Grid as GridIcon, Plus } from 'lucide-react';
 
 import {
   Pagination,
@@ -66,10 +66,12 @@ export default function Index({ posts, auth_user }: Props) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
+    // Sync state when server data changes (pagination or page reload)
     useEffect(() => {
         const normalized = normalizePosts(posts.data);
         setPosts(normalized);
 
+        // If a modal is open, ensure it gets the fresh data so creating comments works immediately
         if (selectedPost) {
             const updatedPost = normalized.find(p => p.id === selectedPost.id);
             if (updatedPost) {
@@ -176,7 +178,10 @@ export default function Index({ posts, auth_user }: Props) {
         
         router.get(window.location.pathname, { page }, {
             preserveState: true,
-            preserveScroll: true, 
+            preserveScroll: false, 
+            onSuccess: () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         });
     };
 
@@ -227,21 +232,32 @@ export default function Index({ posts, auth_user }: Props) {
             <Head title="My Posts" />
             <FlashMessage />
 
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="flex flex-1 flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">My Posts</h2>
-                        <Link href={route('posts.create')}>
-                            <Button className="cursor-pointer">Create</Button>
-                        </Link>
+            <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col p-4 sm:p-6 lg:p-8">
+                
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+                    <div className="space-y-1">
+                        <h2 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+                            <GridIcon className="h-6 w-6 text-neutral-500" />
+                            My Posts
+                        </h2>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                            Manage and view your personal collection of posts.
+                        </p>
                     </div>
+                    <Link href={route('posts.create')}>
+                        <Button className="w-full sm:w-auto px-6 font-semibold cursor-pointer shadow-sm">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Post
+                        </Button>
+                    </Link>
+                </div>
 
-                    {postsState.length ? (
-                        <>
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {postsState.map((post) => (
+                {postsState.length ? (
+                    <>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {postsState.map((post) => (
+                                <div key={post.id} className="h-full">
                                     <Post
-                                        key={post.id}
                                         post={post}
                                         currentUserId={auth.user.id}
                                         onClick={handlePostClick}
@@ -251,49 +267,56 @@ export default function Index({ posts, auth_user }: Props) {
                                         onEdit={handleEdit}
                                         onDelete={handleDelete}
                                     />
-                                ))}
-                            </div>
-
-                            <div className="py-4 mt-4">
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious 
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handlePageChange(posts.current_page - 1);
-                                                }}
-                                                className={posts.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-
-                                        {renderPaginationItems()}
-
-                                        <PaginationItem>
-                                            <PaginationNext 
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handlePageChange(posts.current_page + 1);
-                                                }}
-                                                className={posts.current_page >= posts.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
-                            <div className="mb-4 rounded-full bg-neutral-100 p-3 dark:bg-neutral-800">
-                                <Heart className="size-6 text-neutral-500" />
-                            </div>
-                            <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No posts created yet</h3>
-                            <p className="mt-1 text-sm text-neutral-500">Get started by creating a new post.</p>
+                                </div>
+                            ))}
                         </div>
-                    )}
-                </div>
+
+                        <div className="mt-10">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious 
+                                            href="#"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handlePageChange(posts.current_page - 1);
+                                            }}
+                                            className={posts.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+
+                                    {renderPaginationItems()}
+
+                                    <PaginationItem>
+                                        <PaginationNext 
+                                            href="#"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handlePageChange(posts.current_page + 1);
+                                            }}
+                                            className={posts.current_page >= posts.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-200 bg-neutral-50/50 py-24 text-center dark:border-neutral-800 dark:bg-neutral-900/50">
+                        <div className="mb-4 rounded-full bg-white p-4 shadow-sm ring-1 ring-neutral-200 dark:bg-neutral-800 dark:ring-neutral-700">
+                            <Heart className="h-8 w-8 text-neutral-400" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">No posts created yet</h3>
+                        <p className="mt-2 text-sm text-neutral-500 max-w-sm mx-auto mb-6">
+                            You haven't shared anything yet. Create your first post to start building your collection.
+                        </p>
+                        <Link href={route('posts.create')}>
+                            <Button variant="outline" className="cursor-pointer">
+                                Create your first post
+                            </Button>
+                        </Link>
+                    </div>
+                )}
             </div>
 
             <CommentModal
