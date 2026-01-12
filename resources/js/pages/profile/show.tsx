@@ -2,7 +2,7 @@ import AppLayout from "@/layouts/app-layout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { User as UserIcon } from "lucide-react";
 import { BreadcrumbItem, Post as PostType } from "@/types";
-import { useState } from "react"; 
+import { useState, useEffect } from "react"; 
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import Post from "@/components/Post";
@@ -29,7 +29,7 @@ export interface User {
     email: string;
     created_at: string;
     updated_at: string;
-    avatar_url?: string | null;
+    avatar?: string | null;
     followers: { id: number }[];
     following: { id: number }[];
 }
@@ -72,6 +72,7 @@ export default function Show({
 
     const [isFollowed, setIsFollowed] = useState(user_is_followed);
 
+    // Update normalization to safely handle the user object and avatar_url
     const normalizePosts = (rawPosts: PostType[]) => {
         return rawPosts.map((p) => ({
             ...p,
@@ -79,13 +80,15 @@ export default function Show({
             comments_count: p.comments_count ?? 0,
             shares_count: p.shares_count ?? 0,
             liked_by_user: p.liked_by_user ?? false,
-            user: p.user ?? { id: 0, name: "Unknown User" },
+            // Ensure the user fallback includes the avatar_url key to match types
+            user: p.user ?? { id: 0, name: "Unknown User", avatar: null },
         }));
     };
 
     const [prevPostsData, setPrevPostsData] = useState(posts.data);
     const [postsState, setPosts] = useState<PostType[]>(normalizePosts(posts.data));
 
+    // Effect to handle data updates from pagination or Inertia reloads
     if (posts.data !== prevPostsData) {
         setPrevPostsData(posts.data);
         setPosts(normalizePosts(posts.data));
@@ -249,9 +252,9 @@ export default function Show({
                 <div className="flex flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            {user.avatar_url ? (
+                            {user.avatar ? (
                                 <img
-                                    src={user.avatar_url}
+                                    src={user.avatar}
                                     alt={user.name}
                                     className="w-20 h-20 rounded-full object-cover"
                                 />
