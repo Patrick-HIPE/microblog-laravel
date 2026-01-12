@@ -127,22 +127,6 @@ export default function CommentModal({
 
         submitCreate(route('comments.store', activePost.id), {
             preserveScroll: true,   
-            onStart: () => {
-                const tempComment: Comment = {
-                    id: Math.random(),
-                    body: data.body,
-                    created_at: new Date().toISOString(),
-                    user: currentUser as unknown as UserType 
-                };
-
-                const updatedPost = {
-                    ...activePost,
-                    comments: activePost.comments ? [...activePost.comments, tempComment] : [tempComment],
-                    comments_count: (activePost.comments_count ?? 0) + 1,
-                };
-                
-                onPostUpdate(updatedPost);
-            },
             onSuccess: () => {
                 reset();
                 setTimeout(() => {

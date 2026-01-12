@@ -1,12 +1,12 @@
-import AppLayout from '../layouts/app-layout';
-import CommentModal from '../components/CommentModal';
-import { dashboard } from '../routes';
-import { BreadcrumbItem, Post as PostType } from '../types'; 
-import { Head, router, usePage } from '@inertiajs/react'; 
+import AppLayout from '@/layouts/app-layout';
+import CommentModal from '@/components/CommentModal';
+import { dashboard } from '@/routes';
+import { type BreadcrumbItem, type Post as PostType, type User as UserType } from '@/types'; 
+import { Head, router, usePage, Link } from '@inertiajs/react'; 
 import { route } from 'ziggy-js';
 import { useState, useEffect } from 'react'; 
 import Post from '@/components/Post';
-import { Heart } from 'lucide-react'; 
+import { Heart, User } from 'lucide-react'; 
 import FlashMessage from '@/components/flash-message';
 
 import {
@@ -35,28 +35,34 @@ interface PaginationMeta {
 interface DashboardProps {
     posts?: PostType[];
     pagination: PaginationMeta; 
+    auth_user?: UserType;
 }
 
 interface PageProps {
     auth: {
-        user: {
-            id: number;
-            name: string;
-            avatar?: string;
-        };
+        user: UserType;
     };
     [key: string]: unknown; 
 }
 
-export default function Dashboard({ posts: initialPosts = [], pagination }: DashboardProps) {
+export default function Dashboard({ posts: initialPosts = [], pagination, auth_user }: DashboardProps) {
     const { auth } = usePage<PageProps>().props;
+    const currentUser = auth_user || auth.user;
+
     const [posts, setPosts] = useState<PostType[]>(initialPosts);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
     useEffect(() => {
         setPosts(initialPosts);
-    }, [initialPosts]);
+
+        if (selectedPost) {
+            const updatedPost = initialPosts.find(p => p.id === selectedPost.id);
+            if (updatedPost) {
+                setSelectedPost(updatedPost);
+            }
+        }
+    }, [initialPosts]); 
 
     const handlePostClick = (postId: number) => {
         router.get(route('posts.show', postId));
@@ -211,6 +217,27 @@ export default function Dashboard({ posts: initialPosts = [], pagination }: Dash
             <div className="flex flex-1 flex-col items-center bg-neutral-100 p-4 dark:bg-black/10">
                 <div className="w-full max-w-[680px] space-y-4">
 
+                    {/* What's on your mind section (Updated look) */}
+                    <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+                        <Link href={route('profile.show', currentUser.id)} className="shrink-0">
+                             <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                                {currentUser.avatar ? (
+                                    <img src={currentUser.avatar} alt={currentUser.name} className="h-full w-full object-cover" />
+                                ) : (
+                                    <div className="flex h-full w-full items-center justify-center">
+                                        <User className="h-5 w-5 text-neutral-400" />
+                                    </div>
+                                )}
+                            </div>
+                        </Link>
+                        <button 
+                            onClick={() => router.get(route('posts.create'))}
+                            className="flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2.5 text-left text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-750 dark:hover:border-neutral-600 transition-colors cursor-text"
+                        >
+                            What's on your mind?
+                        </button>
+                    </div>
+
                     {posts.length ? (
                         <>
                             <div className="flex flex-col gap-4">
@@ -275,7 +302,7 @@ export default function Dashboard({ posts: initialPosts = [], pagination }: Dash
                 isOpen={isModalOpen}
                 onClose={closeCommentModal}
                 post={selectedPost}
-                currentUser={auth.user}
+                currentUser={currentUser} 
                 onPostUpdate={handlePostUpdate}
             />
         </AppLayout>

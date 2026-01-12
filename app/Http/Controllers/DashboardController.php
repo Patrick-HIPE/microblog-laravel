@@ -66,6 +66,12 @@ class DashboardController extends Controller
             ];
         });
 
+        $formattedUser = $user ? [
+            'id' => $user->id,
+            'name' => $user->name,
+            'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+        ] : null;
+
         return Inertia::render('dashboard', [
             'posts' => $posts->items(),
             'pagination' => [
@@ -76,6 +82,7 @@ class DashboardController extends Controller
                 'next_page_url' => $posts->nextPageUrl(),
                 'prev_page_url' => $posts->previousPageUrl(),
             ],
+            'auth_user' => $formattedUser,
         ]);
     }
 }
