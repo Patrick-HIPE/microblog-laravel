@@ -18,6 +18,7 @@ interface PageProps {
 
 interface ShowPostProps {
     post: PostType;
+    auth_user?: UserType;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -25,9 +26,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Post Details', href: '#' },
 ];
 
-export default function ShowPost({ post: initialPost }: ShowPostProps) {
+export default function ShowPost({ post: initialPost, auth_user }: ShowPostProps) {
     const { auth } = usePage<PageProps>().props;
-    const currentUserId = auth?.user?.id;
+    
+    const currentUser = auth_user || auth.user;
+    const currentUserId = currentUser?.id;
 
     const [currentPost, setCurrentPost] = useState<PostType>(initialPost);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,7 +95,6 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
             <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 items-center">
                 <div className="w-full flex flex-col rounded-xl border border-gray-100 bg-white shadow-sm transition-all dark:border-neutral-800 dark:bg-neutral-900 md:max-w-2xl">
                     
-                    {/* Header */}
                     <div className="flex items-start justify-between px-4 pt-4">
                         <div className="flex items-center gap-3">
                             {currentPost.user ? (
@@ -100,7 +102,6 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                                     href={route('profile.show', currentPost.user.id)}
                                     className="flex items-center gap-3 group"
                                 >
-                                    {/* Removed hover ring here */}
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-neutral-800">
                                         {currentPost.user.avatar ? (
                                             <img src={currentPost.user.avatar} alt={currentPost.user.name} className="h-full w-full object-cover" />
@@ -132,7 +133,6 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                             )}
                         </div>
 
-                        {/* Menu */}
                         <div className="relative">
                             {(currentPost.user?.id === currentUserId) && (
                                 <button 
@@ -172,14 +172,12 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                         </div>
                     </div>
 
-                    {/* Content */}
                     <div className="px-4 py-4 md:px-4 md:py-5">
                         <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800 dark:text-gray-200 break-words">
                             {currentPost.content}
                         </p>
                     </div>
 
-                    {/* Image */}
                     {currentPost.image_url ? (
                         <div className="w-full bg-gray-50 dark:bg-black/50 border-y border-gray-100 dark:border-neutral-800">
                             <img
@@ -194,12 +192,10 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                         </div>
                     )}
 
-                    {/* Stats */}
                     <div className="mx-4 mt-3 flex items-center justify-between border-b border-gray-100 pb-3 text-xs text-gray-500 dark:border-neutral-800 dark:text-neutral-400 font-medium">
                         <div className="flex items-center gap-1.5 min-h-[20px]">
                             {currentPost.likes_count > 0 && (
                                 <>
-                                    {/* Restored the Solid Red Heart here */}
                                     <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500">
                                         <Heart className="h-3 w-3 fill-white text-white" />
                                     </div>
@@ -213,7 +209,6 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex px-2 py-1 pb-2">
                         <button
                             onClick={handleLike}
@@ -239,7 +234,7 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                             onClick={handleShare}
                             className={`group flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all duration-200 hover:bg-gray-50 active:scale-95 dark:hover:bg-neutral-800 ${
                                 currentPost.shared_by_user 
-                                ? 'text-blue-600 dark:text-blue-500'   
+                                ? 'text-blue-600 dark:text-blue-500'    
                                 : 'text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400'
                             }`}
                         >
@@ -254,7 +249,7 @@ export default function ShowPost({ post: initialPost }: ShowPostProps) {
                 isOpen={isModalOpen}
                 onClose={closeCommentModal}
                 post={currentPost}
-                currentUser={auth.user}
+                currentUser={currentUser}
                 onPostUpdate={handlePostUpdate}
             />
         </AppLayout>

@@ -51,7 +51,7 @@ class PostController extends Controller
                 'user' => [
                     'id' => $post->user->id,
                     'name' => $post->user->name,
-                    'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null, // Transform URL
+                    'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null,
                 ],
                 'can' => [
                     'update' => $currentUser ? $currentUser->can('update', $post) : false,
@@ -65,7 +65,7 @@ class PostController extends Controller
                         'user' => [
                             'id' => $comment->user->id,
                             'name' => $comment->user->name,
-                            'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null, // Transform URL
+                            'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null,
                         ],
                     ];
                 }),
@@ -128,7 +128,7 @@ class PostController extends Controller
             'user' => [
                 'id' => $post->user->id,
                 'name' => $post->user->name,
-                'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null, // Transform URL
+                'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null,
             ],
             'can' => [
                 'update' => $currentUser ? $currentUser->can('update', $post) : false,
@@ -142,19 +142,24 @@ class PostController extends Controller
                     'user' => [
                         'id' => $comment->user->id,
                         'name' => $comment->user->name,
-                        'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null, // Transform URL
+                        'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null,
                     ],
                 ];
             }),
         ];
 
+        $formattedUser = $currentUser ? [
+            'id' => $currentUser->id,
+            'name' => $currentUser->name,
+            'avatar' => $currentUser->avatar ? Storage::url($currentUser->avatar) : null,
+        ] : null;
+
         return Inertia::render('post/show', [
             'post' => $data,
-            'current_user_id' => $currentUser?->id,
+            'auth_user' => $formattedUser,
         ]);
     }
 
-    // ... rest of the controller (edit, update, destroy, like, share) remains unchanged
     public function edit(Post $post)
     {
         $this->authorize('update', $post);
