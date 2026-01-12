@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Share extends Model
 {
     use SoftDeletes;
-    
+
     protected $fillable = [
         'user_id',
         'post_id',
@@ -18,11 +18,11 @@ class Share extends Model
 
     public function user() 
     {
-        $this->belongsTo(User::class);
+        return $this->belongsTo(User::class);
     }
 
     public function post()
     {
-        $this->belongsTo(Post::class);
+        return $this->belongsTo(Post::class);
     }
 }
