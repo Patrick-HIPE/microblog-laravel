@@ -1,8 +1,8 @@
 import { useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { X, User, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { Post, Comment, User as UserType } from '@/types';
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
+import { Post, Comment } from '@/types'; // Removed UserType as it was unused
 import { Textarea } from '@/components/ui/textarea';
 
 interface CommentModalProps {
@@ -37,6 +37,18 @@ export default function CommentModal({
     const editCommentForm = useForm({
         body: '',
     });
+
+    // FIX: Declare handleClose using useCallback so it can be used in useEffect dependencies safely
+    const handleClose = useCallback(() => {
+        reset();
+        clearErrors();
+        editCommentForm.reset();
+        editCommentForm.clearErrors();
+        setEditingCommentId(null);
+        setOpenMenuId(null);
+        setMenuPosition(null);
+        onClose();
+    }, [reset, clearErrors, editCommentForm, onClose]);
 
     useLayoutEffect(() => {
         if (editingCommentId !== null && editTextareaRef.current) {
@@ -77,18 +89,7 @@ export default function CommentModal({
                 document.removeEventListener('keydown', handleEsc);
             };
         }
-    }, [openMenuId, isOpen]);
-
-    const handleClose = () => {
-        reset();
-        clearErrors();
-        editCommentForm.reset();
-        editCommentForm.clearErrors();
-        setEditingCommentId(null);
-        setOpenMenuId(null);
-        setMenuPosition(null);
-        onClose();
-    };
+    }, [openMenuId, isOpen, handleClose]); // Added handleClose to dependencies
 
     if (!isOpen || !activePost) return null;
 

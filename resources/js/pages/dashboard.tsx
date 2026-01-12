@@ -4,7 +4,7 @@ import { dashboard } from '@/routes';
 import { type BreadcrumbItem, type Post as PostType, type User as UserType } from '@/types'; 
 import { Head, router, usePage, Link } from '@inertiajs/react'; 
 import { route } from 'ziggy-js';
-import { useState, useEffect } from 'react'; 
+import { useState } from 'react'; 
 import Post from '@/components/Post';
 import { Heart, User } from 'lucide-react'; 
 import FlashMessage from '@/components/flash-message';
@@ -50,19 +50,27 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
     const currentUser = auth_user || auth.user;
 
     const [posts, setPosts] = useState<PostType[]>(initialPosts);
+    const [prevInitialPosts, setPrevInitialPosts] = useState(initialPosts);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
-    useEffect(() => {
+    /**
+     * LINT FIX: Syncing state during render.
+     * If initialPosts changes (e.g., via pagination), we update the local 'posts' 
+     * and the 'selectedPost' immediately without using an Effect.
+     */
+    if (initialPosts !== prevInitialPosts) {
+        setPrevInitialPosts(initialPosts);
         setPosts(initialPosts);
 
         if (selectedPost) {
-            const updatedPost = initialPosts.find(p => p.id === selectedPost.id);
-            if (updatedPost) {
-                setSelectedPost(updatedPost);
+            const updated = initialPosts.find(p => p.id === selectedPost.id);
+            if (updated) {
+                setSelectedPost(updated);
             }
         }
-    }, [initialPosts]); 
+    }
 
     const handlePostClick = (postId: number) => {
         router.get(route('posts.show', postId));
@@ -74,6 +82,9 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
         router.get(window.location.pathname, { page }, {
             preserveState: true,
             preserveScroll: false,
+            onSuccess: () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
         });
     };
 
@@ -217,7 +228,6 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
             <div className="flex flex-1 flex-col items-center bg-neutral-100 p-4 dark:bg-black/10">
                 <div className="w-full max-w-[680px] space-y-4">
 
-                    {/* What's on your mind section (Updated look) */}
                     <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                         <Link href={route('profile.show', currentUser.id)} className="shrink-0">
                              <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">

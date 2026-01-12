@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import FlashMessage from '@/components/flash-message';
 import CommentModal from '@/components/CommentModal';
 import Post from '@/components/Post';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Heart, Grid as GridIcon, Plus } from 'lucide-react';
 
 import {
@@ -45,40 +45,46 @@ interface PageProps {
     [key: string]: unknown;
 }
 
+// 1. Helper function remains stable outside the component
+const normalizePosts = (rawPosts: PostType[]) => {
+    return rawPosts.map((p) => ({
+        ...p,
+        updated_at: p.updated_at || p.created_at,
+        likes_count: p.likes_count ?? 0,
+        comments_count: p.comments_count ?? 0,
+        shares_count: p.shares_count ?? 0,
+        liked_by_user: p.liked_by_user ?? false,
+        user: p.user ?? { id: 0, name: 'Unknown User' },
+    }));
+};
+
 export default function Index({ posts, auth_user }: Props) {
     const { auth } = usePage<PageProps>().props; 
     
     const currentUser = auth_user || auth.user;
 
-    const normalizePosts = (rawPosts: PostType[]) => {
-        return rawPosts.map((p) => ({
-            ...p,
-            updated_at: p.updated_at || p.created_at,
-            likes_count: p.likes_count ?? 0,
-            comments_count: p.comments_count ?? 0,
-            shares_count: p.shares_count ?? 0,
-            liked_by_user: p.liked_by_user ?? false,
-            user: p.user ?? { id: 0, name: 'Unknown User' },
-        }));
-    };
-
-    const [postsState, setPosts] = useState<PostType[]>(normalizePosts(posts.data));
+    // Initialize state
+    const [postsState, setPosts] = useState<PostType[]>(() => normalizePosts(posts.data));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
-    // Sync state when server data changes (pagination or page reload)
-    useEffect(() => {
+    // 2. FIX: Track the previous version of posts data to detect prop updates
+    const [prevPostsData, setPrevPostsData] = useState(posts.data);
+
+    /**
+     * LINT FIX: Sync state during render instead of using useEffect.
+     * This handles pagination and server-side refreshes without cascading renders.
+     */
+    if (posts.data !== prevPostsData) {
         const normalized = normalizePosts(posts.data);
         setPosts(normalized);
+        setPrevPostsData(posts.data);
 
-        // If a modal is open, ensure it gets the fresh data so creating comments works immediately
         if (selectedPost) {
-            const updatedPost = normalized.find(p => p.id === selectedPost.id);
-            if (updatedPost) {
-                setSelectedPost(updatedPost);
-            }
+            const updated = normalized.find(p => p.id === selectedPost.id);
+            if (updated) setSelectedPost(updated);
         }
-    }, [posts.data]);
+    }
 
     const handleDelete = (postId: number) => {
         if (!confirm('Are you sure you want to delete this post?')) return;

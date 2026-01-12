@@ -2,7 +2,7 @@ import AppLayout from "@/layouts/app-layout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { User as UserIcon } from "lucide-react";
 import { BreadcrumbItem, Post as PostType, User as UserType } from "@/types";
-import { useState, useEffect } from "react"; 
+import { useState } from "react"; 
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import Post from "@/components/Post";
@@ -59,6 +59,17 @@ interface PageProps {
     [key: string]: unknown;
 }
 
+const normalizePosts = (rawPosts: PostType[]) => {
+    return rawPosts.map((p) => ({
+        ...p,
+        likes_count: p.likes_count ?? 0,
+        comments_count: p.comments_count ?? 0,
+        shares_count: p.shares_count ?? 0,
+        liked_by_user: p.liked_by_user ?? false,
+        user: p.user ?? { id: 0, name: "Unknown User", avatar: null },
+    }));
+};
+
 export default function Show({
     user,
     posts,
@@ -67,37 +78,33 @@ export default function Show({
     auth_user,
 }: Props) {
     const { auth } = usePage<PageProps>().props;
-    
     const currentUser = auth_user || auth.user;
 
     const [isFollowed, setIsFollowed] = useState(user_is_followed);
-
-    const normalizePosts = (rawPosts: PostType[]) => {
-        return rawPosts.map((p) => ({
-            ...p,
-            likes_count: p.likes_count ?? 0,
-            comments_count: p.comments_count ?? 0,
-            shares_count: p.shares_count ?? 0,
-            liked_by_user: p.liked_by_user ?? false,
-            user: p.user ?? { id: 0, name: "Unknown User", avatar: null },
-        }));
-    };
-
-    const [postsState, setPosts] = useState<PostType[]>(normalizePosts(posts.data));
     const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // Initialize state with normalized posts
+    const [postsState, setPosts] = useState<PostType[]>(() => normalizePosts(posts.data));
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
-    useEffect(() => {
+    // FIX: Store the 'prev' data to detect prop changes (pagination/refresh)
+    const [prevPostsData, setPrevPostsData] = useState(posts.data);
+
+    /**
+     * LINT FIX: Instead of useEffect, we update state during render.
+     * When Inertia fetches new data (pagination), posts.data change.
+     * We detect that here, update our local state, and update the 'prev' tracker.
+     */
+    if (posts.data !== prevPostsData) {
         const normalized = normalizePosts(posts.data);
         setPosts(normalized);
+        setPrevPostsData(posts.data);
 
         if (selectedPost) {
             const updatedPost = normalized.find(p => p.id === selectedPost.id);
-            if (updatedPost) {
-                setSelectedPost(updatedPost);
-            }
+            if (updatedPost) setSelectedPost(updatedPost);
         }
-    }, [posts.data]); 
+    }
 
     const isOwnProfile = current_user_id === user.id;
 
@@ -107,6 +114,9 @@ export default function Show({
         router.get(window.location.pathname, { page }, {
             preserveState: true,
             preserveScroll: true, 
+            onSuccess: () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
         });
     };
 
@@ -251,10 +261,8 @@ export default function Show({
             <Head title={user.name} />
             <FlashMessage />
 
-            {/* Main Wrapper with equal padding (p-6) */}
             <div className="p-6">
                 <div className="flex flex-col gap-6 rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    {/* User Header Section */}
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             {user.avatar ? (
