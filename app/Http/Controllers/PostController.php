@@ -211,34 +211,55 @@ class PostController extends Controller
     public function like(Post $post)
     {
         $user = Auth::user();
-        if (!$user) abort(403, 'You must be logged in to like a post.');
+        if (!$user) abort(403);
 
-        $like = Like::where('user_id', $user->id)->where('post_id', $post->id)->first();
+        $like = Like::withTrashed()
+            ->where('user_id', $user->id)
+            ->where('post_id', $post->id)
+            ->first();
 
-        if ($like) {
-            $like->delete();
-            $message = 'You unliked the post.';
+        if (!$like) {
+            Like::create([
+                'user_id' => $user->id,
+                'post_id' => $post->id
+            ]);
+            $message = 'Post liked.';
+        } elseif ($like->trashed()) {
+            $like->restore();
+            $message = 'Like restored.';
         } else {
-            Like::create(['user_id' => $user->id, 'post_id' => $post->id]);
-            $message = 'You liked the post.';
+            $like->delete();
+            $message = 'Post unliked.';
         }
+
         return back()->with('success', $message);
     }
 
     public function share(Post $post)
     {
         $user = Auth::user();
-        if (!$user) abort(403, 'You must be logged in to share a post.');
+        if (!$user) abort(403);
 
-        $existingShare = $post->shares()->where('user_id', $user->id)->first();
+        $share = Share::withTrashed()
+            ->where('user_id', $user->id)
+            ->where('post_id', $post->id)
+            ->first();
 
-        if ($existingShare) {
-            $existingShare->delete();
-            $message = 'You unshared the post.';
+        if (!$share) {
+            try {
+                $post->shares()->create(['user_id' => $user->id]);
+                $message = 'Post shared.';
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                return back()->with('info', 'Already shared.');
+            }
+        } elseif ($share->trashed()) {
+            $share->restore();
+            $message = 'Share restored.';
         } else {
-            $post->shares()->create(['user_id' => $user->id]);
-            $message = 'You shared the post.';
+            $share->delete();
+            $message = 'Post unshared.';
         }
+
         return back()->with('success', $message);
     }
 }
