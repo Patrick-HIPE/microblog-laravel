@@ -25,8 +25,8 @@ class ProfileController extends Controller
             ->with([
                 'user:id,name,avatar',
                 'likes',
-                'comments.user:id,name,avatar', 
-                'shares'
+                'shares',
+                'comments.user:id,name,avatar'
             ])
             ->latest()
             ->paginate(6); 
@@ -67,11 +67,18 @@ class ProfileController extends Controller
 
         $user->avatar = $user->avatar ? Storage::url($user->avatar) : null;
 
+        $formattedCurrentUser = $currentUser ? [
+            'id' => $currentUser->id,
+            'name' => $currentUser->name,
+            'avatar' => $currentUser->avatar ? Storage::url($currentUser->avatar) : null,
+        ] : null;
+
         return Inertia::render('profile/show', [
             'user' => $user->load('followers', 'following'),
             'posts' => $posts, 
             'current_user_id' => $currentUser?->id,
             'user_is_followed' => $isFollowed,
+            'auth_user' => $formattedCurrentUser,
         ]);
     }
 

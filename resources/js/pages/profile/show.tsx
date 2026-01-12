@@ -1,7 +1,7 @@
 import AppLayout from "@/layouts/app-layout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { User as UserIcon } from "lucide-react";
-import { BreadcrumbItem, Post as PostType } from "@/types";
+import { BreadcrumbItem, Post as PostType, User as UserType } from "@/types";
 import { useState, useEffect } from "react"; 
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
@@ -49,15 +49,12 @@ interface Props {
     posts: PaginationMeta; 
     current_user_id: number | null;
     user_is_followed: boolean;
+    auth_user?: UserType;
 }
 
 interface PageProps {
     auth: {
-        user: {
-            id: number;
-            name: string;
-            avatar?: string;
-        };
+        user: UserType;
     };
     [key: string]: unknown;
 }
@@ -67,12 +64,14 @@ export default function Show({
     posts,
     current_user_id,
     user_is_followed,
+    auth_user,
 }: Props) {
     const { auth } = usePage<PageProps>().props;
+    
+    const currentUser = auth_user || auth.user;
 
     const [isFollowed, setIsFollowed] = useState(user_is_followed);
 
-    // Update normalization to safely handle the user object and avatar_url
     const normalizePosts = (rawPosts: PostType[]) => {
         return rawPosts.map((p) => ({
             ...p,
@@ -80,22 +79,25 @@ export default function Show({
             comments_count: p.comments_count ?? 0,
             shares_count: p.shares_count ?? 0,
             liked_by_user: p.liked_by_user ?? false,
-            // Ensure the user fallback includes the avatar_url key to match types
             user: p.user ?? { id: 0, name: "Unknown User", avatar: null },
         }));
     };
 
-    const [prevPostsData, setPrevPostsData] = useState(posts.data);
     const [postsState, setPosts] = useState<PostType[]>(normalizePosts(posts.data));
-
-    // Effect to handle data updates from pagination or Inertia reloads
-    if (posts.data !== prevPostsData) {
-        setPrevPostsData(posts.data);
-        setPosts(normalizePosts(posts.data));
-    }
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
+
+    useEffect(() => {
+        const normalized = normalizePosts(posts.data);
+        setPosts(normalized);
+
+        if (selectedPost) {
+            const updatedPost = normalized.find(p => p.id === selectedPost.id);
+            if (updatedPost) {
+                setSelectedPost(updatedPost);
+            }
+        }
+    }, [posts.data]); 
 
     const isOwnProfile = current_user_id === user.id;
 
@@ -201,6 +203,7 @@ export default function Show({
     };
 
     const handlePostUpdate = (updatedPost: PostType) => {
+        setSelectedPost(updatedPost);
         setPosts((prev) =>
             prev.map((p) => (p.id === updatedPost.id ? updatedPost : p))
         );
@@ -368,7 +371,7 @@ export default function Show({
                 isOpen={isModalOpen}
                 onClose={closeCommentModal}
                 post={selectedPost}
-                currentUser={auth.user}
+                currentUser={currentUser}
                 onPostUpdate={handlePostUpdate}
             />
         </AppLayout>

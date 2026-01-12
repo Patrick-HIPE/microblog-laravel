@@ -72,12 +72,21 @@ class PostController extends Controller
             ];
         });
 
+        // NEW: Format the current user specifically to ensure avatar URL is correct for the frontend modal
+        $formattedUser = $currentUser ? [
+            'id' => $currentUser->id,
+            'name' => $currentUser->name,
+            'avatar' => $currentUser->avatar ? Storage::url($currentUser->avatar) : null,
+        ] : null;
+
         return Inertia::render('post/index', [
             'posts' => $posts,
             'current_user_id' => $currentUser?->id,
+            'auth_user' => $formattedUser, // Pass this to the view
         ]);
     }
 
+    // ... rest of the methods (create, store, show, edit, update, destroy, like, share) remain unchanged
     public function create()
     {
         return Inertia::render('post/create');
@@ -97,9 +106,6 @@ class PostController extends Controller
         return redirect()->route('posts.index')->with('message', 'Post created successfully!');
     }
 
-    /**
-     * Display a specific post.
-     */
     public function show(Post $post)
     {
         $currentUser = Auth::user();

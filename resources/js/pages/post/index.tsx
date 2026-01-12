@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import FlashMessage from '@/components/flash-message';
 import CommentModal from '@/components/CommentModal';
 import Post from '@/components/Post';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 
 import {
@@ -35,6 +35,7 @@ interface PaginationMeta {
 
 interface Props {
     posts: PaginationMeta;
+    auth_user?: UserType;
 }
 
 interface PageProps {
@@ -44,9 +45,11 @@ interface PageProps {
     [key: string]: unknown;
 }
 
-export default function Index({ posts }: Props) {
+export default function Index({ posts, auth_user }: Props) {
     const { auth } = usePage<PageProps>().props; 
     
+    const currentUser = auth_user || auth.user;
+
     const normalizePosts = (rawPosts: PostType[]) => {
         return rawPosts.map((p) => ({
             ...p,
@@ -59,16 +62,21 @@ export default function Index({ posts }: Props) {
         }));
     };
 
-    const [prevPostsData, setPrevPostsData] = useState(posts.data);
     const [postsState, setPosts] = useState<PostType[]>(normalizePosts(posts.data));
-
-    if (posts.data !== prevPostsData) {
-        setPrevPostsData(posts.data);
-        setPosts(normalizePosts(posts.data));
-    }
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
+
+    useEffect(() => {
+        const normalized = normalizePosts(posts.data);
+        setPosts(normalized);
+
+        if (selectedPost) {
+            const updatedPost = normalized.find(p => p.id === selectedPost.id);
+            if (updatedPost) {
+                setSelectedPost(updatedPost);
+            }
+        }
+    }, [posts.data]);
 
     const handleDelete = (postId: number) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
@@ -292,7 +300,7 @@ export default function Index({ posts }: Props) {
                 isOpen={isModalOpen}
                 onClose={closeCommentModal}
                 post={selectedPost}
-                currentUser={auth.user} 
+                currentUser={currentUser}
                 onPostUpdate={handlePostUpdate}
             />
         </AppLayout>
