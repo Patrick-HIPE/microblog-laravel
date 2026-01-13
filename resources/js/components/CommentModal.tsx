@@ -2,7 +2,7 @@ import { useForm, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { X, User, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
-import { Post, Comment } from '@/types'; // Removed UserType as it was unused
+import { Post, Comment } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
 
 interface CommentModalProps {
@@ -38,7 +38,6 @@ export default function CommentModal({
         body: '',
     });
 
-    // FIX: Declare handleClose using useCallback so it can be used in useEffect dependencies safely
     const handleClose = useCallback(() => {
         reset();
         clearErrors();
@@ -89,7 +88,7 @@ export default function CommentModal({
                 document.removeEventListener('keydown', handleEsc);
             };
         }
-    }, [openMenuId, isOpen, handleClose]); // Added handleClose to dependencies
+    }, [openMenuId, isOpen, handleClose]);
 
     if (!isOpen || !activePost) return null;
 
