@@ -11,6 +11,7 @@ use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Http\Resources\PostResource;
 
 class PostController extends Controller
 {
@@ -21,66 +22,14 @@ class PostController extends Controller
      */
     public function index()
     {
-        $currentUser = Auth::user();
-
-        $posts = Post::where('user_id', $currentUser->id)
-            ->with([
-                'user:id,name,avatar',
-                'likes',
-                'shares', 
-                'comments.user:id,name,avatar'
-            ])
-            ->latest() 
-            ->paginate(6); 
-
-        $posts->getCollection()->transform(function ($post) use ($currentUser) {
-            return [
-                'id' => $post->id,
-                'content' => $post->content,
-                'image_url' => $post->image ? Storage::url($post->image) : null,
-                'created_at' => $post->created_at,
-                'updated_at' => $post->updated_at,
-                
-                'likes_count' => $post->likes->count(),
-                'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
-                
-                'shares_count' => $post->shares->count(),
-                'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
-
-                'comments_count' => $post->comments->count(),
-                'user' => [
-                    'id' => $post->user->id,
-                    'name' => $post->user->name,
-                    'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null,
-                ],
-                'can' => [
-                    'update' => $currentUser ? $currentUser->can('update', $post) : false,
-                    'delete' => $currentUser ? $currentUser->can('delete', $post) : false,
-                ],
-                'comments' => $post->comments->map(function ($comment) {
-                    return [
-                        'id' => $comment->id,
-                        'body' => $comment->body,
-                        'created_at' => $comment->created_at,
-                        'user' => [
-                            'id' => $comment->user->id,
-                            'name' => $comment->user->name,
-                            'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null,
-                        ],
-                    ];
-                }),
-            ];
-        });
-        $formattedUser = $currentUser ? [
-            'id' => $currentUser->id,
-            'name' => $currentUser->name,
-            'avatar' => $currentUser->avatar ? Storage::url($currentUser->avatar) : null,
-        ] : null;
+        $posts = Post::where('user_id', Auth::id())
+            ->with(['user', 'likes', 'shares', 'comments.user'])
+            ->withCount(['likes', 'shares', 'comments'])
+            ->latest()
+            ->paginate(6);
 
         return Inertia::render('post/index', [
-            'posts' => $posts,
-            'current_user_id' => $currentUser?->id,
-            'auth_user' => $formattedUser,
+            'posts' => PostResource::collection($posts),
         ]);
     }
 
@@ -105,61 +54,10 @@ class PostController extends Controller
 
     public function show(Post $post)
     {
-        $currentUser = Auth::user();
-
-        $post->load([
-            'user:id,name,avatar', 
-            'likes',
-            'shares',
-            'comments.user:id,name,avatar'
-        ]);
-
-        $data = [
-            'id' => $post->id,
-            'content' => $post->content,
-            'image_url' => $post->image ? Storage::url($post->image) : null,
-            'created_at' => $post->created_at,
-            'updated_at' => $post->updated_at,
-            
-            'likes_count' => $post->likes->count(),
-            'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
-
-            'shares_count' => $post->shares->count(),
-            'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
-
-            'comments_count' => $post->comments->count(),
-            'user' => [
-                'id' => $post->user->id,
-                'name' => $post->user->name,
-                'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null,
-            ],
-            'can' => [
-                'update' => $currentUser ? $currentUser->can('update', $post) : false,
-                'delete' => $currentUser ? $currentUser->can('delete', $post) : false,
-            ],
-            'comments' => $post->comments->map(function ($comment) {
-                return [
-                    'id' => $comment->id,
-                    'body' => $comment->body,
-                    'created_at' => $comment->created_at,
-                    'user' => [
-                        'id' => $comment->user->id,
-                        'name' => $comment->user->name,
-                        'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null,
-                    ],
-                ];
-            }),
-        ];
-
-        $formattedUser = $currentUser ? [
-            'id' => $currentUser->id,
-            'name' => $currentUser->name,
-            'avatar' => $currentUser->avatar ? Storage::url($currentUser->avatar) : null,
-        ] : null;
+        $post->load(['user', 'likes', 'shares', 'comments.user']);
 
         return Inertia::render('post/show', [
-            'post' => $data,
-            'auth_user' => $formattedUser,
+            'post' => new PostResource($post),
         ]);
     }
 

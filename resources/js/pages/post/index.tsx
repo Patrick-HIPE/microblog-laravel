@@ -23,18 +23,25 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'My Posts', href: route('posts.index') },
 ];
 
-interface PaginationMeta {
-    data: PostType[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    next_page_url: string | null;
-    prev_page_url: string | null;
-}
-
 interface Props {
-    posts: PaginationMeta;
+    posts: {
+        data: PostType[];
+        links: {
+            first: string;
+            last: string;
+            prev: string | null;
+            next: string | null;
+        };
+        meta: {
+            current_page: number;
+            last_page: number;
+            from: number;
+            to: number;
+            total: number;
+            path: string;
+            per_page: number;
+        };
+    };
     auth_user?: UserType;
 }
 
@@ -59,7 +66,6 @@ const normalizePosts = (rawPosts: PostType[]) => {
 
 export default function Index({ posts, auth_user }: Props) {
     const { auth } = usePage<PageProps>().props; 
-    
     const currentUser = auth_user || auth.user;
 
     const [postsState, setPosts] = useState<PostType[]>(() => normalizePosts(posts.data));
@@ -82,6 +88,7 @@ export default function Index({ posts, auth_user }: Props) {
         if (!confirm('Are you sure you want to delete this post?')) return;
 
         router.delete(route('posts.destroy', postId), {
+            preserveScroll: true,
             onSuccess: () => setPosts((prev) => prev.filter((p) => p.id !== postId)),
         });
     };
@@ -107,10 +114,9 @@ export default function Index({ posts, auth_user }: Props) {
             })
         );
 
-        router.post(route('posts.toggle-like', postId), {}, {
+        router.post(route('posts.toggle-like', { post: postId }), {}, {
             preserveScroll: true,
             preserveState: true,
-            onError: () => console.error("Failed to like post")
         });
     };
 
@@ -139,7 +145,6 @@ export default function Index({ posts, auth_user }: Props) {
         };
 
         setSelectedPost(normalizedPost);
-
         setPosts((prevPosts) =>
             prevPosts.map((p) => (p.id === normalizedPost.id ? normalizedPost : p))
         );
@@ -165,16 +170,14 @@ export default function Index({ posts, auth_user }: Props) {
         router.post(route('posts.share', postId), {}, {
             preserveScroll: true,
             preserveState: true,
-            onError: () => {
-                console.error("Failed to share post");
-            }
         });
     };
 
     const handlePageChange = (page: number) => {
-        if (page < 1 || page > posts.last_page || page === posts.current_page) return;
+        const { current_page, last_page } = posts.meta;
+        if (page < 1 || page > last_page || page === current_page) return;
         
-        router.get(window.location.pathname, { page }, {
+        router.get(route('posts.index'), { page }, {
             preserveState: true,
             preserveScroll: false, 
             onSuccess: () => {
@@ -186,7 +189,7 @@ export default function Index({ posts, auth_user }: Props) {
     const renderPaginationItems = () => {
         const items = [];
         const maxVisiblePages = 5;
-        const { current_page, last_page } = posts;
+        const { current_page, last_page } = posts.meta;
 
         if (last_page <= maxVisiblePages) {
             for (let i = 1; i <= last_page; i++) items.push(i);
@@ -206,7 +209,7 @@ export default function Index({ posts, auth_user }: Props) {
                     <PaginationItem key={index}>
                         <PaginationLink
                             href="#"
-                            isActive={item === posts.current_page}
+                            isActive={item === current_page}
                             onClick={(e) => {
                                 e.preventDefault();
                                 handlePageChange(item);
@@ -268,35 +271,37 @@ export default function Index({ posts, auth_user }: Props) {
                             ))}
                         </div>
 
-                        <div className="mt-10">
-                            <Pagination>
-                                <PaginationContent>
-                                    <PaginationItem>
-                                        <PaginationPrevious 
-                                            href="#"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handlePageChange(posts.current_page - 1);
-                                            }}
-                                            className={posts.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                        />
-                                    </PaginationItem>
+                        {posts.meta.last_page > 1 && (
+                            <div className="mt-10">
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious 
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handlePageChange(posts.meta.current_page - 1);
+                                                }}
+                                                className={posts.meta.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
 
-                                    {renderPaginationItems()}
+                                        {renderPaginationItems()}
 
-                                    <PaginationItem>
-                                        <PaginationNext 
-                                            href="#"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handlePageChange(posts.current_page + 1);
-                                            }}
-                                            className={posts.current_page >= posts.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                        />
-                                    </PaginationItem>
-                                </PaginationContent>
-                            </Pagination>
-                        </div>
+                                        <PaginationItem>
+                                            <PaginationNext 
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handlePageChange(posts.meta.current_page + 1);
+                                                }}
+                                                className={posts.meta.current_page >= posts.meta.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                            </div>
+                        )}
                     </>
                 ) : (
                     <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-200 bg-neutral-50/50 py-24 text-center dark:border-neutral-800 dark:bg-neutral-900/50">
