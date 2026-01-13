@@ -3,7 +3,6 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem, type Post as PostType, type User as UserType } from '@/types';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { Heart, MessageCircle, Share2, User, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { route } from 'ziggy-js';
 import FlashMessage from '@/components/flash-message';
@@ -178,17 +177,13 @@ export default function ShowPost({ post: initialPost, auth_user }: ShowPostProps
                         </p>
                     </div>
 
-                    {currentPost.image_url ? (
+                    {currentPost.image_url && (
                         <div className="w-full bg-gray-50 dark:bg-black/50 border-y border-gray-100 dark:border-neutral-800">
                             <img
                                 src={currentPost.image_url}
                                 alt="Post Image"
                                 className="max-h-[600px] w-full object-contain mx-auto"
                             />
-                        </div>
-                    ) : (
-                        <div className="relative w-full border-y border-neutral-100 bg-gray-50 dark:border-neutral-800 dark:bg-neutral-900/50" style={{ paddingTop: '40%' }}>
-                            <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/5 dark:stroke-neutral-100/5" />
                         </div>
                     )}
 

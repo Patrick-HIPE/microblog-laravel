@@ -111,7 +111,7 @@ export default function Post({
                                 ? showMenu 
                                     ? 'bg-gray-100 text-gray-900 dark:bg-neutral-800 dark:text-white cursor-pointer' 
                                     : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300 cursor-pointer'
-                                : 'text-gray-200 dark:text-neutral-800 cursor-default' // Dimmed style when not owner
+                                : 'text-gray-200 dark:text-neutral-800 cursor-default' 
                         }`}
                     >
                         <MoreHorizontal className="h-5 w-5" />
