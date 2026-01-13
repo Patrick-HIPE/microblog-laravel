@@ -14,7 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Create() {
-    const { data, setData, post, processing, errors, reset } = useForm<{
+    const { data, setData, post, processing, errors } = useForm<{
         content: string;
         image: File | null;
     }>({
@@ -55,10 +55,7 @@ export default function Create() {
         e.preventDefault();
         post(route('posts.store'), {
             forceFormData: true,
-            onSuccess: () => {
-                reset();
-                setImagePreview(null);
-            },
+            preserveState: false, 
         });
     }
 

@@ -45,7 +45,6 @@ interface PageProps {
     [key: string]: unknown;
 }
 
-// 1. Helper function remains stable outside the component
 const normalizePosts = (rawPosts: PostType[]) => {
     return rawPosts.map((p) => ({
         ...p,
@@ -63,18 +62,11 @@ export default function Index({ posts, auth_user }: Props) {
     
     const currentUser = auth_user || auth.user;
 
-    // Initialize state
     const [postsState, setPosts] = useState<PostType[]>(() => normalizePosts(posts.data));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
-
-    // 2. FIX: Track the previous version of posts data to detect prop updates
     const [prevPostsData, setPrevPostsData] = useState(posts.data);
 
-    /**
-     * LINT FIX: Sync state during render instead of using useEffect.
-     * This handles pagination and server-side refreshes without cascading renders.
-     */
     if (posts.data !== prevPostsData) {
         const normalized = normalizePosts(posts.data);
         setPosts(normalized);

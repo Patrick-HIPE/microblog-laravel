@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface FlashMessageData {
     message?: string;
@@ -10,29 +10,29 @@ interface FlashMessageData {
 
 export default function FlashMessage() {
     const { flash } = usePage<{ flash: FlashMessageData }>().props;
-    
-    const [prevFlash, setPrevFlash] = useState(flash);
-    const [isVisible, setIsVisible] = useState(false);
+    const content = flash.error || flash.success || flash.message;
 
-    if (flash !== prevFlash) {
-        setPrevFlash(flash);
-        setIsVisible(!!(flash.message || flash.success || flash.error));
-    }
+    // If there is no content, don't render the wrapper at all
+    if (!content) return null;
+
+    // We provide a 'key'. Whenever the message text changes, 
+    // React will completely unmount and remount this internal component,
+    // naturally resetting the 5-second timer.
+    return <FlashMessageChild key={content} content={content} isError={!!flash.error} />;
+}
+
+function FlashMessageChild({ content, isError }: { content: string; isError: boolean }) {
+    const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
-        if (isVisible) {
-            const timer = setTimeout(() => {
-                setIsVisible(false);
-            }, 5000);
+        const timer = setTimeout(() => {
+            setIsVisible(false);
+        }, 5000);
 
-            return () => clearTimeout(timer);
-        }
-    }, [isVisible]);
+        return () => clearTimeout(timer);
+    }, []); // Only runs once on mount (when the message first appears)
 
     if (!isVisible) return null;
-
-    const isError = !!flash.error;
-    const content = flash.error || flash.success || flash.message;
 
     return (
         <div className="fixed top-4 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 animate-in slide-in-from-top-5 fade-in-0 duration-300">
@@ -57,7 +57,7 @@ export default function FlashMessage() {
 
                 <button 
                     onClick={() => setIsVisible(false)}
-                    className={`shrink-0 rounded-md p-0.5 transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer`}
+                    className="shrink-0 rounded-md p-0.5 transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
                 >
                     <X className="h-4 w-4" />
                     <span className="sr-only">Close</span>

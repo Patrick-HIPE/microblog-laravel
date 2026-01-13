@@ -65,6 +65,7 @@ export default function Update({ post }: Props) {
     e.preventDefault();
     submitPost(route('posts.update', post.id), {
       forceFormData: true,
+      preserveState: false, 
     });
   }
 

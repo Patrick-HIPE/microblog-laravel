@@ -71,8 +71,6 @@ class PostController extends Controller
                 }),
             ];
         });
-
-        // NEW: Format the current user specifically to ensure avatar URL is correct for the frontend modal
         $formattedUser = $currentUser ? [
             'id' => $currentUser->id,
             'name' => $currentUser->name,
@@ -82,11 +80,10 @@ class PostController extends Controller
         return Inertia::render('post/index', [
             'posts' => $posts,
             'current_user_id' => $currentUser?->id,
-            'auth_user' => $formattedUser, // Pass this to the view
+            'auth_user' => $formattedUser,
         ]);
     }
 
-    // ... rest of the methods (create, store, show, edit, update, destroy, like, share) remain unchanged
     public function create()
     {
         return Inertia::render('post/create');
@@ -103,7 +100,7 @@ class PostController extends Controller
 
         Post::create($data);
 
-        return redirect()->route('posts.index')->with('message', 'Post created successfully!');
+        return redirect()->route('posts.index')->with('success', 'Post created successfully.');
     }
 
     public function show(Post $post)
@@ -195,7 +192,7 @@ class PostController extends Controller
         unset($data['_method'], $data['removeImage']);
         $post->update($data);
 
-        return redirect()->route('posts.index')->with('message', 'Post updated successfully!');
+        return redirect()->route('posts.index')->with('success', 'Post updated successfully.');
     }
 
     public function destroy(Post $post)
@@ -205,7 +202,7 @@ class PostController extends Controller
             Storage::disk('public')->delete($post->image);
         }
         $post->delete();
-        return redirect()->route('posts.index')->with('message', 'Post deleted successfully!');
+        return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
     }
 
     public function like(Post $post)
