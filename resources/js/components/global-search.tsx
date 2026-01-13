@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
-import { Search, Loader2, User as UserIcon, X } from "lucide-react";
+import { Search, Loader2, User as UserIcon, FileText, X } from "lucide-react";
 import { route } from 'ziggy-js';
 import {
     Command,
@@ -14,33 +14,35 @@ import {
 } from "@/components/ui/command";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { User, Post } from '@/types';
 
-interface User {
-    id: number;
-    name: string;
-    email: string;
+interface SearchPost extends Post {
+    author: string;
+    preview: string;
+    date: string;
 }
 
 interface SearchResults {
     users: User[];
+    posts: SearchPost[];
 }
 
 export function GlobalSearch() {
     const [openDialog, setOpenDialog] = useState(false); 
     const [openDropdown, setOpenDropdown] = useState(false); 
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<SearchResults>({ users: [] });
+    const [results, setResults] = useState<SearchResults>({ users: [], posts: [] });
     const [loading, setLoading] = useState(false);
     
     const containerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 if (window.innerWidth >= 768) {
-                    const input = document.querySelector('#global-search-input') as HTMLInputElement;
-                    input?.focus();
+                    inputRef.current?.focus();
                 } else {
                     setOpenDialog((open) => !open);
                 }
@@ -61,9 +63,9 @@ export function GlobalSearch() {
     }, []);
 
     useEffect(() => {
-        if (!query) {
-            return;
-        }
+        // FIX: Just return if there is no query. 
+        // The clearing of state is handled in handleQueryChange.
+        if (!query) return;
 
         const delayDebounceFn = setTimeout(() => {
             setLoading(true);
@@ -85,25 +87,34 @@ export function GlobalSearch() {
     const handleQueryChange = (value: string) => {
         setQuery(value);
         if (!value) {
-            setResults({ users: [] });
+            // Clearing results here (inside the event handler) is the correct React pattern
+            setResults({ users: [], posts: [] });
             setOpenDropdown(false);
         }
     };
 
     const handleSelectUser = (id: number) => {
-        setOpenDialog(false);
-        setOpenDropdown(false);
-        setQuery("");
-        setResults({ users: [] });
+        closeAll();
         router.visit(route('profile.show', id));
     };
 
+    const handleSelectPost = (id: number) => {
+        closeAll();
+        router.visit(`/posts/${id}`);
+    };
+
+    const closeAll = () => {
+        setOpenDialog(false);
+        setOpenDropdown(false);
+        setQuery("");
+        setResults({ users: [], posts: [] });
+    }
+
     const clearSearch = () => {
         setQuery("");
-        setResults({ users: [] });
+        setResults({ users: [], posts: [] });
         setOpenDropdown(false);
-        const input = document.querySelector('#global-search-input') as HTMLInputElement;
-        input?.focus();
+        inputRef.current?.focus();
     };
 
     return (
@@ -126,8 +137,9 @@ export function GlobalSearch() {
                 <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
+                        ref={inputRef}
                         id="global-search-input"
-                        placeholder="Search users..."
+                        placeholder="Search users or posts..."
                         className="pl-9 pr-9 bg-muted/50 focus:bg-background transition-colors"
                         value={query}
                         onChange={(e) => handleQueryChange(e.target.value)}
@@ -154,30 +166,61 @@ export function GlobalSearch() {
                         <Command shouldFilter={false}>
                             <CommandList>
                                 {loading && (
-                                    <div className="py-6 text-center text-sm text-muted-foreground">
-                                        Searching...
+                                    <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" /> Searching...
                                     </div>
                                 )}
                                 
-                                {!loading && results.users.length === 0 && (
+                                {!loading && results.users.length === 0 && results.posts.length === 0 && (
                                     <CommandEmpty className="py-6 text-center text-sm">
-                                        No users found.
+                                        No results found for "{query}"
                                     </CommandEmpty>
                                 )}
 
                                 {!loading && results.users.length > 0 && (
-                                    <CommandGroup heading="Users">
+                                    <CommandGroup heading="Users" className="p-2">
                                         {results.users.map((user) => (
                                             <CommandItem
-                                                key={user.id}
-                                                value={`${user.name} ${user.email}`}
+                                                key={`user-${user.id}`}
                                                 onSelect={() => handleSelectUser(user.id)}
-                                                className="cursor-pointer"
+                                                className="flex items-center gap-4 px-3 py-3 cursor-pointer rounded-md transition-colors hover:bg-accent"
                                             >
-                                                <UserIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium">{user.name}</span>
+                                                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-primary/10 flex items-center justify-center">
+                                                    {user.avatar ? (
+                                                        <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                                                    ) : (
+                                                        <UserIcon className="h-5 w-5 text-primary" />
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col space-y-0.5">
+                                                    <span className="text-sm font-semibold text-foreground">{user.name}</span>
                                                     <span className="text-xs text-muted-foreground">{user.email}</span>
+                                                </div>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                )}
+
+                                {!loading && results.posts.length > 0 && (
+                                    <CommandGroup heading="Posts" className="p-2">
+                                        {results.posts.map((post) => (
+                                            <CommandItem
+                                                key={`post-${post.id}`}
+                                                onSelect={() => handleSelectPost(post.id)}
+                                                className="flex items-start gap-4 px-3 py-3 cursor-pointer rounded-md transition-colors hover:bg-accent"
+                                            >
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground mt-0.5">
+                                                    <FileText className="h-5 w-5" />
+                                                </div>
+                                                <div className="flex flex-col space-y-1 overflow-hidden">
+                                                    <span className="text-sm font-semibold leading-tight text-foreground line-clamp-2">
+                                                        {post.preview}
+                                                    </span>
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                        <span className="font-medium text-primary/80">@{post.author.replace(/\s+/g, '').toLowerCase()}</span>
+                                                        <span>•</span>
+                                                        <span>{post.date}</span>
+                                                    </div>
                                                 </div>
                                             </CommandItem>
                                         ))}
@@ -191,7 +234,7 @@ export function GlobalSearch() {
 
             <CommandDialog open={openDialog} onOpenChange={setOpenDialog}>
                 <CommandInput 
-                    placeholder="Search users..." 
+                    placeholder="Search users or posts..." 
                     value={query}
                     onValueChange={handleQueryChange}
                 />
@@ -202,21 +245,49 @@ export function GlobalSearch() {
                             Searching...
                         </div>
                     )}
-                    {!loading && query && results.users.length === 0 && (
+                    
+                    {!loading && query && results.users.length === 0 && results.posts.length === 0 && (
                         <CommandEmpty>No results found.</CommandEmpty>
                     )}
+                    
                     {results.users.length > 0 && (
-                        <CommandGroup heading="Users">
+                        <CommandGroup heading="Users" className="p-2">
                             {results.users.map((user) => (
                                 <CommandItem
-                                    key={user.id}
-                                    value={`${user.name} ${user.email}`}
+                                    key={`user-dialog-${user.id}`}
                                     onSelect={() => handleSelectUser(user.id)}
+                                    className="flex items-center gap-4 px-3 py-3"
                                 >
-                                    <UserIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                    <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-primary/10 flex items-center justify-center">
+                                        {user.avatar ? (
+                                            <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
+                                        ) : (
+                                            <UserIcon className="h-5 w-5 text-primary" />
+                                        )}
+                                    </div>
                                     <div className="flex flex-col">
-                                        <span>{user.name}</span>
+                                        <span className="text-sm font-semibold">{user.name}</span>
                                         <span className="text-xs text-muted-foreground">{user.email}</span>
+                                    </div>
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    )}
+
+                    {results.posts.length > 0 && (
+                        <CommandGroup heading="Posts" className="p-2">
+                            {results.posts.map((post) => (
+                                <CommandItem
+                                    key={`post-dialog-${post.id}`}
+                                    onSelect={() => handleSelectPost(post.id)}
+                                    className="flex items-start gap-4 px-3 py-3"
+                                >
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground mt-0.5">
+                                        <FileText className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden">
+                                        <span className="text-sm font-semibold leading-tight line-clamp-2">{post.preview}</span>
+                                        <span className="text-xs text-muted-foreground">by {post.author} • {post.date}</span>
                                     </div>
                                 </CommandItem>
                             ))}
