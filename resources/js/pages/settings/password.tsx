@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/user-password';
+import FlashMessage from '@/components/flash-message';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,6 +28,7 @@ export default function Password() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Password settings" />
+            <FlashMessage />
 
             <SettingsLayout>
                 <div className="space-y-6">
@@ -118,8 +120,9 @@ export default function Password() {
 
                                 <div className="flex items-center gap-4">
                                     <Button
+                                        className="cursor-pointer"
                                         disabled={processing}
-                                        data-test="update-password-button"
+                                        data-test="update-password-button" 
                                     >
                                         Save password
                                     </Button>

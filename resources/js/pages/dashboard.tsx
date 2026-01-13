@@ -55,11 +55,6 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
-    /**
-     * LINT FIX: Syncing state during render.
-     * If initialPosts changes (e.g., via pagination), we update the local 'posts' 
-     * and the 'selectedPost' immediately without using an Effect.
-     */
     if (initialPosts !== prevInitialPosts) {
         setPrevInitialPosts(initialPosts);
         setPosts(initialPosts);
