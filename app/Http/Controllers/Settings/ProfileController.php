@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,7 +37,9 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $user->fill($request->validated());
+        Gate::authorize('update', $user);
+
+        $user->fill($request->safe()->except(['avatar']));
 
         if ($request->hasFile('avatar')) {
             if ($user->avatar) {
@@ -51,7 +54,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return to_route('profile.edit');
+        return to_route('profile.edit')->with('success', 'Account updated successfully.');
     }
 
     /**
@@ -59,11 +62,13 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        Gate::authorize('delete', $user);
+
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);
-
-        $user = $request->user();
 
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
@@ -76,6 +81,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')->with('success', 'Account deleted successfully.');
     }
 }

@@ -14,6 +14,7 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit, update as updateRoute } from '@/routes/profile'; 
 import { route } from 'ziggy-js';
+import FlashMessage from '@/components/flash-message';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -62,6 +63,7 @@ export default function Profile({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Profile settings" />
+            <FlashMessage />
 
             <SettingsLayout>
                 <div className="space-y-6">
