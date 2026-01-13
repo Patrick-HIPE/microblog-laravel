@@ -1,8 +1,8 @@
-import { type BreadcrumbItem, type SharedData } from '@/types';
+import { type BreadcrumbItem, type SharedData, type User } from '@/types'; 
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react'; 
 import { FormEventHandler, useState, useRef } from 'react';
-import { User } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -25,21 +25,23 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Profile({
     mustVerifyEmail,
     status,
+    user,
 }: {
     mustVerifyEmail: boolean;
     status?: string;
+    user: User; 
 }) {
     const { auth } = usePage<SharedData>().props;
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
+    const { data, setData, post, processing, errors, recentlySuccessful, isDirty } = useForm({
         _method: 'PATCH', 
-        name: auth.user.name,
-        email: auth.user.email,
+        name: user.name,
+        email: user.email,
         avatar: null as File | null,
     });
 
-    const [previewUrl, setPreviewUrl] = useState<string | null>(auth.user.avatar || null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(user.avatar || null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -83,7 +85,7 @@ export default function Profile({
                                     />
                                 ) : (
                                     <div className="flex h-full w-full items-center justify-center cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
-                                        <User className="h-10 w-10 text-neutral-400" />
+                                        <UserIcon className="h-10 w-10 text-neutral-400" />
                                     </div>
                                 )}
                             </div>
@@ -166,7 +168,12 @@ export default function Profile({
                         )}
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing} className="cursor-pointer">Save</Button>
+                            <Button 
+                                disabled={processing || !isDirty} 
+                                className="cursor-pointer"
+                            >
+                                Save
+                            </Button>
                             <Transition
                                 show={recentlySuccessful}
                                 enter="transition ease-in-out"

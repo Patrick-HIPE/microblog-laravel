@@ -3,6 +3,7 @@ import { Head, router } from "@inertiajs/react";
 import { User as UserIcon } from "lucide-react";
 import { BreadcrumbItem } from "@/types";
 import { route } from "ziggy-js";
+import FlashMessage from '@/components/flash-message';
 
 export interface Follower {
   id: number;
@@ -32,7 +33,6 @@ export default function FollowersPage({ user, followers, current_user_id }: Prop
     router.get(route('profile.show', { user: followerId }));
   };
 
-  // Build breadcrumbs dynamically
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Profile', href: route('profile.show', { user: user.id }) },
     { title: 'Followers', href: '#' },
@@ -41,6 +41,7 @@ export default function FollowersPage({ user, followers, current_user_id }: Prop
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={`${user.name}'s Followers`} />
+      <FlashMessage />
 
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-6">{user.name}'s Followers</h2>

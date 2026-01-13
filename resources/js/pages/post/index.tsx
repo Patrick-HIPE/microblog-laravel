@@ -7,7 +7,7 @@ import FlashMessage from '@/components/flash-message';
 import CommentModal from '@/components/CommentModal';
 import Post from '@/components/Post';
 import { useState } from 'react';
-import { Heart, Grid as GridIcon, Plus } from 'lucide-react';
+import { Heart, Plus } from 'lucide-react';
 
 import {
   Pagination,
@@ -243,7 +243,6 @@ export default function Index({ posts, auth_user }: Props) {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
                     <div className="space-y-1">
                         <h2 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-                            <GridIcon className="h-6 w-6 text-neutral-500" />
                             My Posts
                         </h2>
                         <p className="text-sm text-neutral-500 dark:text-neutral-400">

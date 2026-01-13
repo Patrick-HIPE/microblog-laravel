@@ -3,6 +3,7 @@ import { Head, router } from "@inertiajs/react";
 import { User as UserIcon } from "lucide-react";
 import { BreadcrumbItem } from "@/types";
 import { route } from "ziggy-js";
+import FlashMessage from '@/components/flash-message';
 
 export interface Following {
   id: number;
@@ -40,6 +41,7 @@ export default function FollowingPage({ user, following, current_user_id }: Prop
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={`${user.name}'s Following`} />
+      <FlashMessage />
 
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-6">{user.name}'s Following</h2>

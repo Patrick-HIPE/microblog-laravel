@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Post;
 use App\Models\Share;
+use App\Models\Follow; // <--- Import this
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,11 +17,6 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, SoftDeletes, Notifiable, TwoFactorAuthenticatable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -28,11 +24,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'two_factor_secret',
@@ -40,11 +31,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -54,28 +40,31 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    public function posts()
-    {
-        return $this->hasMany(Post::class);
-    }
+    // ... (Your existing Post/Comment methods remain the same) ...
+    public function posts() { return $this->hasMany(Post::class); }
+    public function comments() { return $this->hasMany(Comment::class); }
 
-    public function comments()
-    {
-        return $this->hasMany(Comment::class);
-    }
+    // ▼▼▼ UPDATED RELATIONSHIPS ▼▼▼
 
     public function followers()
     {
         return $this->belongsToMany(User::class, 'follows', 'user_id', 'follower_id')
+            ->using(Follow::class) // Tell Laravel to use the custom Pivot
+            ->wherePivotNull('deleted_at') // Filter out soft-deleted followers
             ->withTimestamps();
     }
 
     public function following()
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'user_id')
+            ->using(Follow::class) // Tell Laravel to use the custom Pivot
+            ->wherePivotNull('deleted_at') // Filter out people you unfollowed
             ->withTimestamps();
     }
 
+    // ▲▲▲ END UPDATES ▲▲▲
+
+    // This stays the same; it automatically uses the filters applied above
     public function isFollowing(User $user): bool
     {
         return $this->following()->where('user_id', $user->id)->exists();

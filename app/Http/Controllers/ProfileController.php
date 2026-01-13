@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use App\Models\User;
+use App\Models\Follow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -93,13 +94,28 @@ class ProfileController extends Controller
             abort(403, 'Cannot follow yourself.');
         }
 
-        if ($currentUser->isFollowing($user)) {
-            $currentUser->following()->detach($user->id);
+        $follow = \App\Models\Follow::withTrashed()
+            ->where('follower_id', $currentUser->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($follow) {
+            if ($follow->trashed()) {
+                $follow->restore();
+                $message = "Follow restored.";
+            } else {
+                $follow->delete();
+                $message = "User unfollowed.";
+            }
         } else {
-            $currentUser->following()->attach($user->id);
+            Follow::create([
+                'follower_id' => $currentUser->id,
+                'user_id' => $user->id,
+            ]);
+            $message = "User followed.";
         }
 
-        return back();
+        return back()->with('success', $message);
     }
 
     /**

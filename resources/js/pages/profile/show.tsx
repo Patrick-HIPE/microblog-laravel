@@ -278,10 +278,10 @@ export default function Show({
                             )}
 
                             <div>
-                                <h2 className="text-2xl font-bold">
+                                <h2 className="text-xl font-bold">
                                     {user.name}
                                 </h2>
-                                <p className="text-neutral-600 dark:text-neutral-400">
+                                <p className=" text-sm text-neutral-600 dark:text-neutral-400">
                                     {user.email}
                                 </p>
                             </div>
