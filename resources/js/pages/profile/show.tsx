@@ -312,7 +312,7 @@ export default function Show({
                 </div>
 
                 <Tabs defaultValue="posts" className="w-full">
-                    <TabsList className="mb-6 flex w-full justify-start h-auto sm:w-max gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+                    <TabsList className="mb-3 flex w-full h-auto sm:w-max gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
                         {tabItems.map((tab) => (
                             <TabsTrigger key={tab.value} value={tab.value} className={tabTriggerClasses}>
                                 {tab.label}

@@ -6,8 +6,9 @@ import { Head, router, usePage, Link } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import { useState } from 'react'; 
 import Post from '@/components/Post';
-import { Heart, User } from 'lucide-react'; 
+import { FileText, User } from 'lucide-react'; 
 import FlashMessage from '@/components/flash-message';
+import EmptyState from "@/components/EmptyState";
 
 import {
   Pagination,
@@ -23,18 +24,27 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Home', href: dashboard().url },
 ];
 
-interface PaginationMeta {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    next_page_url: string | null;
-    prev_page_url: string | null;
+interface PostCollection {
+    data: PostType[];
+    links: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+    };
+    meta: {
+        current_page: number;
+        last_page: number;
+        from: number;
+        to: number;
+        total: number;
+        path: string;
+        per_page: number;
+    };
 }
 
 interface DashboardProps {
-    posts?: PostType[];
-    pagination: PaginationMeta; 
+    posts: PostCollection;
     auth_user?: UserType;
 }
 
@@ -45,25 +55,36 @@ interface PageProps {
     [key: string]: unknown; 
 }
 
-export default function Dashboard({ posts: initialPosts = [], pagination, auth_user }: DashboardProps) {
+const normalizePosts = (rawPosts: PostType[]) => {
+    return rawPosts.map((p) => ({
+        ...p,
+        updated_at: p.updated_at || p.created_at,
+        likes_count: p.likes_count ?? 0,
+        comments_count: p.comments_count ?? 0,
+        shares_count: p.shares_count ?? 0,
+        liked_by_user: p.liked_by_user ?? false,
+        user: p.user ?? { id: 0, name: 'Unknown User' },
+    }));
+};
+
+export default function Dashboard({ posts, auth_user }: DashboardProps) {
     const { auth } = usePage<PageProps>().props;
     const currentUser = auth_user || auth.user;
 
-    const [posts, setPosts] = useState<PostType[]>(initialPosts);
-    const [prevInitialPosts, setPrevInitialPosts] = useState(initialPosts);
+    const [postsState, setPosts] = useState<PostType[]>(() => normalizePosts(posts.data));
+    const [prevPostsData, setPrevPostsData] = useState(posts.data);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
-    if (initialPosts !== prevInitialPosts) {
-        setPrevInitialPosts(initialPosts);
-        setPosts(initialPosts);
+    if (posts.data !== prevPostsData) {
+        const normalized = normalizePosts(posts.data);
+        setPosts(normalized);
+        setPrevPostsData(posts.data);
 
         if (selectedPost) {
-            const updated = initialPosts.find(p => p.id === selectedPost.id);
-            if (updated) {
-                setSelectedPost(updated);
-            }
+            const updated = normalized.find(p => p.id === selectedPost.id);
+            if (updated) setSelectedPost(updated);
         }
     }
 
@@ -72,14 +93,13 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
     };
 
     const handlePageChange = (page: number) => {
-        if (page < 1 || page > pagination.last_page || page === pagination.current_page) return;
+        const { current_page, last_page } = posts.meta;
+        if (page < 1 || page > last_page || page === current_page) return;
         
         router.get(window.location.pathname, { page }, {
             preserveState: true,
             preserveScroll: false,
-            onSuccess: () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            },
+            onSuccess: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
         });
     };
 
@@ -103,7 +123,6 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
         router.post(route('posts.toggle-like', postId), {}, {
             preserveScroll: true,
             preserveState: true,
-            onError: () => console.error("Failed to like post")
         });
     };
 
@@ -144,6 +163,7 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
         if (!confirm('Are you sure you want to delete this post?')) return;
 
         router.delete(route('posts.destroy', postId), {
+            preserveScroll: true,
             onSuccess: () => setPosts((prev) => prev.filter((p) => p.id !== postId)),
         });
     };
@@ -153,39 +173,27 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
     };
 
     const handlePostUpdate = (updatedPost: PostType) => {
-        setSelectedPost(updatedPost);
+        const normalizedPost = normalizePosts([updatedPost])[0];
+        setSelectedPost(normalizedPost);
         setPosts((prevPosts) => 
-            prevPosts.map((p) => (p.id === updatedPost.id ? updatedPost : p))
+            prevPosts.map((p) => (p.id === normalizedPost.id ? normalizedPost : p))
         );
     };
 
     const renderPaginationItems = () => {
         const items = [];
         const maxVisiblePages = 5; 
-        const { current_page, last_page } = pagination;
+        const { current_page, last_page } = posts.meta;
 
         if (last_page <= maxVisiblePages) {
-            for (let i = 1; i <= last_page; i++) {
-                items.push(i);
-            }
+            for (let i = 1; i <= last_page; i++) items.push(i);
         } else {
             items.push(1);
-
-            if (current_page > 3) {
-                items.push('ellipsis-start');
-            }
-
+            if (current_page > 3) items.push('ellipsis-start');
             const start = Math.max(2, current_page - 1);
             const end = Math.min(last_page - 1, current_page + 1);
-
-            for (let i = start; i <= end; i++) {
-                items.push(i);
-            }
-
-            if (current_page < last_page - 2) {
-                items.push('ellipsis-end');
-            }
-
+            for (let i = start; i <= end; i++) items.push(i);
+            if (current_page < last_page - 2) items.push('ellipsis-end');
             items.push(last_page);
         }
 
@@ -195,7 +203,7 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
                     <PaginationItem key={index}>
                         <PaginationLink
                             href="#"
-                            isActive={item === pagination.current_page}
+                            isActive={item === current_page}
                             onClick={(e) => {
                                 e.preventDefault();
                                 handlePageChange(item);
@@ -206,7 +214,6 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
                     </PaginationItem>
                 );
             }
-            
             return (
                 <PaginationItem key={index}>
                     <PaginationEllipsis />
@@ -243,10 +250,10 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
                         </button>
                     </div>
 
-                    {posts.length ? (
+                    {postsState.length ? (
                         <>
                             <div className="flex flex-col gap-4">
-                                {posts.map((post) => (
+                                {postsState.map((post) => (
                                     <Post
                                         key={post.id}
                                         post={post}
@@ -269,9 +276,9 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
                                                 href="#"
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    handlePageChange(pagination.current_page - 1);
+                                                    handlePageChange(posts.meta.current_page - 1);
                                                 }}
-                                                className={pagination.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                className={posts.meta.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                                             />
                                         </PaginationItem>
 
@@ -282,9 +289,9 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
                                                 href="#"
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    handlePageChange(pagination.current_page + 1);
+                                                    handlePageChange(posts.meta.current_page + 1);
                                                 }}
-                                                className={pagination.current_page >= pagination.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                className={posts.meta.current_page >= posts.meta.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
                                             />
                                         </PaginationItem>
                                     </PaginationContent>
@@ -292,13 +299,11 @@ export default function Dashboard({ posts: initialPosts = [], pagination, auth_u
                             </div>
                         </>
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white py-12 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-                            <div className="mb-4 rounded-full bg-neutral-100 p-3 dark:bg-neutral-800">
-                                <Heart className="size-6 text-neutral-500" />
-                            </div>
-                            <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">No posts yet</h3>
-                            <p className="mt-1 text-sm text-neutral-500">Check back later for updates.</p>
-                        </div>
+                        <EmptyState
+                            icon={FileText}
+                            title="No posts yet"
+                            description="Create a post or follow other people to see posts here."
+                        />
                     )}
                 </div>
             </div>
