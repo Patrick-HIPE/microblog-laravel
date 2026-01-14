@@ -29,16 +29,10 @@ class ProfileController extends Controller
             ->latest()
             ->paginate(6);
 
-$shares = $user->shares()
-    ->with([
-        'user',              // Who shared it
-        'post.user',         // Who wrote it
-        'post.likes',        // For liked_by_user check
-        'post.shares',       // For shared_by_user check
-        'post.comments.user'
-    ])
-    ->latest()
-    ->paginate(6);
+        $shares = $user->shares()
+            ->with(['user', 'post.user', 'post.likes', 'post.shares', 'post.comments.user'])
+            ->orderBy('updated_at', 'desc')
+            ->paginate(6);
 
         $user->avatar = $user->avatar ? Storage::url($user->avatar) : null;
 

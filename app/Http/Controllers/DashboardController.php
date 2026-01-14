@@ -13,7 +13,6 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Get IDs of people the user follows + the user themselves
         $followingIds = $user->following()->pluck('users.id');
         $allowedUserIds = $followingIds->push($user->id);
 
@@ -21,11 +20,9 @@ class DashboardController extends Controller
             ->with(['user', 'likes', 'shares', 'comments.user'])
             ->withCount(['likes', 'shares', 'comments'])
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
 
         return Inertia::render('dashboard', [
-            // This automatically structures the response as:
-            // { data: [...], links: {...}, meta: {...} }
             'posts' => PostResource::collection($posts),
         ]);
     }
