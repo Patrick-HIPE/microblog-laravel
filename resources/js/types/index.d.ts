@@ -49,8 +49,10 @@ export interface User {
     created_at: string;
     updated_at: string;
     avatar?: string | null;
-    followers: { id: number }[];
-    following: { id: number }[];
+    followers_count?: number;
+    following_count?: number;
+    followers?: { id: number }[];
+    following?: { id: number }[];
 }
 
 export interface Comment {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Models\Follow;
+use App\Http\Resources\PostResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -23,48 +24,10 @@ class ProfileController extends Controller
             : false;
 
         $posts = $user->posts()
-            ->with([
-                'user:id,name,avatar',
-                'likes',
-                'shares',
-                'comments.user:id,name,avatar'
-            ])
+            ->with(['user', 'likes', 'shares', 'comments.user'])
+            ->withCount(['likes', 'shares', 'comments'])
             ->latest()
-            ->paginate(6); 
-
-        $posts->getCollection()->transform(function ($post) use ($currentUser) {
-            return [
-                'id' => $post->id,
-                'content' => $post->content,
-                'image_url' => $post->image ? Storage::url($post->image) : null,
-                'created_at' => $post->created_at,
-                'updated_at' => $post->updated_at,
-                'likes_count' => $post->likes->count(),
-                'comments_count' => $post->comments->count(),
-                'shares_count' => $post->shares->count(),
-                'liked_by_user' => $currentUser ? $post->likes->contains('user_id', $currentUser->id) : false,
-                'shared_by_user' => $currentUser ? $post->shares->contains('user_id', $currentUser->id) : false,
-                
-                'user' => [
-                    'id' => $post->user->id,
-                    'name' => $post->user->name,
-                    'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null,
-                ],
-                
-                'comments' => $post->comments->map(function ($comment) {
-                    return [
-                        'id' => $comment->id,
-                        'body' => $comment->body,
-                        'created_at' => $comment->created_at,
-                        'user' => [
-                            'id' => $comment->user->id,
-                            'name' => $comment->user->name,
-                            'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null,
-                        ],
-                    ];
-                }),
-            ];
-        });
+            ->paginate(6);
 
         $user->avatar = $user->avatar ? Storage::url($user->avatar) : null;
 
@@ -76,7 +39,7 @@ class ProfileController extends Controller
 
         return Inertia::render('profile/show', [
             'user' => $user->load('followers', 'following'),
-            'posts' => $posts, 
+            'posts' => PostResource::collection($posts), 
             'current_user_id' => $currentUser?->id,
             'user_is_followed' => $isFollowed,
             'auth_user' => $formattedCurrentUser,

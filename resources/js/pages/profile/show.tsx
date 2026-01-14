@@ -1,52 +1,50 @@
 import AppLayout from "@/layouts/app-layout";
 import { Head, router, usePage } from "@inertiajs/react";
-import { User as UserIcon } from "lucide-react";
+import { User as UserIcon, Share2, FileText } from "lucide-react";
 import { BreadcrumbItem, Post as PostType, User as UserType } from "@/types";
-import { useState } from "react"; 
+import { useState } from "react";
 import { route } from "ziggy-js";
 import { Button } from "@/components/ui/button";
 import Post from "@/components/Post";
 import CommentModal from "@/components/CommentModal";
 import FlashMessage from '@/components/flash-message';
-
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
+import EmptyState from "@/components/EmptyState";
+import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+    PaginationEllipsis,
 } from "@/components/ui/pagination";
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: "Profile", href: "/profile" },
 ];
 
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-    created_at: string;
-    updated_at: string;
-    avatar?: string | null;
-    followers: { id: number }[];
-    following: { id: number }[];
-}
-
-interface PaginationMeta {
-    data: PostType[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-    next_page_url: string | null;
-    prev_page_url: string | null;
+interface PaginatedData<T> {
+    data: T[];
+    meta: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        from: number;
+        to: number;
+    };
+    links: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+    };
 }
 
 interface Props {
-    user: User;
-    posts: PaginationMeta; 
+    user: UserType;
+    posts: PaginatedData<PostType>;
     current_user_id: number | null;
     user_is_followed: boolean;
     auth_user?: UserType;
@@ -58,17 +56,6 @@ interface PageProps {
     };
     [key: string]: unknown;
 }
-
-const normalizePosts = (rawPosts: PostType[]) => {
-    return rawPosts.map((p) => ({
-        ...p,
-        likes_count: p.likes_count ?? 0,
-        comments_count: p.comments_count ?? 0,
-        shares_count: p.shares_count ?? 0,
-        liked_by_user: p.liked_by_user ?? false,
-        user: p.user ?? { id: 0, name: "Unknown User", avatar: null },
-    }));
-};
 
 export default function Show({
     user,
@@ -82,38 +69,29 @@ export default function Show({
 
     const [isFollowed, setIsFollowed] = useState(user_is_followed);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
-    // Initialize state with normalized posts
-    const [postsState, setPosts] = useState<PostType[]>(() => normalizePosts(posts.data));
-    const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
-    // FIX: Store the 'prev' data to detect prop changes (pagination/refresh)
+    const [postsState, setPosts] = useState<PostType[]>(posts.data);
+    const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
     const [prevPostsData, setPrevPostsData] = useState(posts.data);
 
-    /**
-     * LINT FIX: Instead of useEffect, we update state during render.
-     * When Inertia fetches new data (pagination), posts.data change.
-     * We detect that here, update our local state, and update the 'prev' tracker.
-     */
     if (posts.data !== prevPostsData) {
-        const normalized = normalizePosts(posts.data);
-        setPosts(normalized);
+        setPosts(posts.data);
         setPrevPostsData(posts.data);
 
         if (selectedPost) {
-            const updatedPost = normalized.find(p => p.id === selectedPost.id);
-            if (updatedPost) setSelectedPost(updatedPost);
+            const updated = posts.data.find(p => p.id === selectedPost.id);
+            if (updated) setSelectedPost(updated);
         }
     }
 
     const isOwnProfile = current_user_id === user.id;
 
     const handlePageChange = (page: number) => {
-        if (page < 1 || page > posts.last_page || page === posts.current_page) return;
-        
+        if (page < 1 || page > posts.meta.last_page || page === posts.meta.current_page) return;
+
         router.get(window.location.pathname, { page }, {
             preserveState: true,
-            preserveScroll: true, 
+            preserveScroll: false,
             onSuccess: () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
@@ -123,7 +101,7 @@ export default function Show({
     const renderPaginationItems = () => {
         const items = [];
         const maxVisiblePages = 5;
-        const { current_page, last_page } = posts;
+        const { current_page, last_page } = posts.meta;
 
         if (last_page <= maxVisiblePages) {
             for (let i = 1; i <= last_page; i++) items.push(i);
@@ -146,7 +124,7 @@ export default function Show({
                     <PaginationItem key={index}>
                         <PaginationLink
                             href="#"
-                            isActive={item === posts.current_page}
+                            isActive={item === current_page}
                             onClick={(e) => {
                                 e.preventDefault();
                                 handlePageChange(item);
@@ -189,8 +167,8 @@ export default function Show({
                     ...post,
                     liked_by_user: isNowLiked,
                     likes_count: isNowLiked
-                        ? post.likes_count + 1
-                        : post.likes_count - 1,
+                        ? (post.likes_count || 0) + 1
+                        : (post.likes_count || 0) - 1,
                 };
             })
         );
@@ -222,6 +200,7 @@ export default function Show({
     const handleDelete = (postId: number) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
         router.delete(route('posts.destroy', postId), {
+            preserveScroll: true,
             onSuccess: () => setPosts((prev) => prev.filter((p) => p.id !== postId)),
         });
     };
@@ -238,8 +217,8 @@ export default function Show({
                     return {
                         ...post,
                         shared_by_user: isNowShared,
-                        shares_count: isNowShared 
-                            ? (post.shares_count || 0) + 1 
+                        shares_count: isNowShared
+                            ? (post.shares_count || 0) + 1
                             : (post.shares_count || 0) - 1
                     };
                 }
@@ -250,38 +229,51 @@ export default function Show({
         router.post(route('posts.share', postId), {}, {
             preserveScroll: true,
             preserveState: true,
-            onError: () => {
-                console.error("Failed to share post");
-            }
         });
     };
+
+    const followersCount = user.followers_count ?? user.followers?.length ?? 0;
+    const followingCount = user.following_count ?? user.following?.length ?? 0;
+
+    const tabItems = [
+        { value: 'posts', label: 'Posts' },
+        { value: 'shares', label: 'Shares' },
+    ];
+
+    const tabTriggerClasses = cn(
+        "flex items-center justify-center rounded-md px-3.5 py-1.5 text-sm font-medium transition-all cursor-pointer",
+        "flex-1 sm:flex-none", 
+        "text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-700/60 dark:hover:text-neutral-200",
+        "data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm",
+        "dark:data-[state=active]:bg-neutral-700 dark:data-[state=active]:text-neutral-100"
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={user.name} />
             <FlashMessage />
 
-            <div className="p-6">
-                <div className="flex flex-col gap-6 rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+            <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col p-4 sm:p-6 lg:p-8">
+                <div className="flex flex-col gap-6 rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border bg-white dark:bg-sidebar shadow-sm mb-8">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             {user.avatar ? (
                                 <img
                                     src={user.avatar}
                                     alt={user.name}
-                                    className="w-20 h-20 rounded-full object-cover"
+                                    className="w-20 h-20 rounded-full object-cover ring-2 ring-neutral-100 dark:ring-neutral-800"
                                 />
                             ) : (
-                                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
-                                    <UserIcon className="h-10 w-10 text-neutral-500 dark:text-neutral-300" />
+                                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+                                    <UserIcon className="h-10 w-10 text-neutral-400 dark:text-neutral-500" />
                                 </div>
                             )}
 
                             <div>
-                                <h2 className="text-xl font-bold">
+                                <h2 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
                                     {user.name}
                                 </h2>
-                                <p className=" text-sm text-neutral-600 dark:text-neutral-400">
+                                <p className="text-sm text-neutral-600 dark:text-neutral-400">
                                     {user.email}
                                 </p>
                             </div>
@@ -289,93 +281,112 @@ export default function Show({
 
                         <div className="flex flex-wrap gap-2">
                             <Button
+                                variant="outline"
                                 className="cursor-pointer"
                                 onClick={() => router.get(route("profile.followers", { user: user.id }))}
                             >
-                                followers ({user.followers.length})
+                                <span className="font-bold mr-1">{followersCount}</span> followers
                             </Button>
 
                             <Button
+                                variant="outline"
                                 className="cursor-pointer"
                                 onClick={() => router.get(route("profile.following", { user: user.id }))}
                             >
-                                following ({user.following.length})
+                                <span className="font-bold mr-1">{followingCount}</span> following
                             </Button>
 
                             {!isOwnProfile && (
                                 <Button
                                     onClick={handleFollow}
-                                    className={`cursor-pointer ${
-                                        isFollowed
-                                            ? "bg-neutral-500 hover:bg-neutral-600"
-                                            : "bg-blue-600 hover:bg-blue-700"
-                                    }`}
+                                    className={`cursor-pointer transition-colors ${isFollowed
+                                        ? "bg-neutral-500 hover:bg-neutral-600"
+                                        : "bg-blue-500 hover:bg-blue-600"
+                                        }`}
                                 >
                                     {isFollowed ? "Following" : "Follow"}
                                 </Button>
                             )}
                         </div>
                     </div>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800" />
-
-                    <h3 className="text-lg font-semibold">Posts</h3>
-
-                    {postsState.length ? (
-                        <>
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {postsState.map((post: PostType) => (
-                                    <div key={post.id} className="h-full">
-                                        <Post
-                                            post={post}
-                                            currentUserId={auth.user.id}
-                                            onClick={handlePostClick}
-                                            onLike={handleLike}
-                                            onComment={openCommentModal}
-                                            onShare={handleShare}
-                                            onEdit={handleEdit}
-                                            onDelete={handleDelete}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="pt-2">
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious 
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handlePageChange(posts.current_page - 1);
-                                                }}
-                                                className={posts.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-
-                                        {renderPaginationItems()}
-
-                                        <PaginationItem>
-                                            <PaginationNext 
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handlePageChange(posts.current_page + 1);
-                                                }}
-                                                className={posts.current_page >= posts.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="text-center py-12 text-neutral-500">
-                            This user hasn’t posted anything yet.
-                        </div>
-                    )}
                 </div>
+
+                <Tabs defaultValue="posts" className="w-full">
+                    <TabsList className="mb-6 flex w-full justify-start h-auto sm:w-max gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+                        {tabItems.map((tab) => (
+                            <TabsTrigger key={tab.value} value={tab.value} className={tabTriggerClasses}>
+                                {tab.label}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+
+                    <TabsContent value="posts" className="mt-0">
+                        {postsState.length ? (
+                            <>
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                    {postsState.map((post) => (
+                                        <div key={post.id} className="h-full">
+                                            <Post
+                                                post={post}
+                                                currentUserId={auth.user.id}
+                                                onClick={handlePostClick}
+                                                onLike={handleLike}
+                                                onComment={openCommentModal}
+                                                onShare={handleShare}
+                                                onEdit={handleEdit}
+                                                onDelete={handleDelete}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-10">
+                                    <Pagination>
+                                        <PaginationContent>
+                                            <PaginationItem>
+                                                <PaginationPrevious
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handlePageChange(posts.meta.current_page - 1);
+                                                    }}
+                                                    className={posts.meta.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                />
+                                            </PaginationItem>
+
+                                            {renderPaginationItems()}
+
+                                            <PaginationItem>
+                                                <PaginationNext
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handlePageChange(posts.meta.current_page + 1);
+                                                    }}
+                                                    className={posts.meta.current_page >= posts.meta.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                />
+                                            </PaginationItem>
+                                        </PaginationContent>
+                                    </Pagination>
+                                </div>
+                            </>
+                        ) : (
+                            <EmptyState
+                                icon={FileText}
+                                title="No posts yet"
+                                description="This user hasn’t posted anything yet."
+                            />
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="shares" className="mt-0">
+                        <EmptyState
+                            icon={Share2}
+                            title="No shared posts"
+                            description="This user hasn't shared any posts yet."
+                        />
+                    </TabsContent>
+                </Tabs>
             </div>
 
             <CommentModal
