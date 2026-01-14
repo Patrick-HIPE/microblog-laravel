@@ -55,9 +55,10 @@ class PostController extends Controller
     public function show(Post $post)
     {
         $post->load(['user', 'likes', 'shares', 'comments.user']);
+        $post->loadCount(['likes', 'shares', 'comments']);
 
         return Inertia::render('post/show', [
-            'post' => new PostResource($post),
+            'post' => (new PostResource($post))->resolve(),
         ]);
     }
 
