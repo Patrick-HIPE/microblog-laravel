@@ -29,6 +29,17 @@ class ProfileController extends Controller
             ->latest()
             ->paginate(6);
 
+$shares = $user->shares()
+    ->with([
+        'user',              // Who shared it
+        'post.user',         // Who wrote it
+        'post.likes',        // For liked_by_user check
+        'post.shares',       // For shared_by_user check
+        'post.comments.user'
+    ])
+    ->latest()
+    ->paginate(6);
+
         $user->avatar = $user->avatar ? Storage::url($user->avatar) : null;
 
         $formattedCurrentUser = $currentUser ? [
@@ -40,6 +51,7 @@ class ProfileController extends Controller
         return Inertia::render('profile/show', [
             'user' => $user->load('followers', 'following'),
             'posts' => PostResource::collection($posts), 
+            'shares' => PostResource::collection($shares),
             'current_user_id' => $currentUser?->id,
             'user_is_followed' => $isFollowed,
             'auth_user' => $formattedCurrentUser,

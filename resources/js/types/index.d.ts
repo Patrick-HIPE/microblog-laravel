@@ -82,3 +82,17 @@ export interface Post {
     comments?: Comment[];
     user?: PostUser;
 }
+
+export interface Share extends Post {
+    shared_by: PostUser;
+    is_share?: boolean;
+    shared_at: string;
+    error?: string;
+    id: number;
+    user_id: number;
+    post_id: number;
+    created_at: string;
+    updated_at: string;
+    user: User;
+    post: Post;
+}
