@@ -1,5 +1,6 @@
-import { Share2 } from 'lucide-react';
+import { Share2, FileWarning } from 'lucide-react';
 import Post from '@/components/Post';
+import EmptyState from '@/components/EmptyState';
 import { Post as PostType, Share as ShareType } from '@/types';
 
 interface ShareItemProps {
@@ -12,7 +13,7 @@ interface ShareItemProps {
 }
 
 export default function ShareItem({ share, currentUserId, onLike, onComment, onClick, onShare }: ShareItemProps) {
-    if (!share || share.error) return null;
+    if (!share) return null;
 
     const shareDate = share.shared_at ? new Date(share.shared_at).toLocaleDateString(undefined, {
         month: 'short', 
@@ -37,14 +38,23 @@ export default function ShareItem({ share, currentUserId, onLike, onComment, onC
             </div>
 
             <div className="mt-1">
-                <Post 
-                    post={share} 
-                    currentUserId={currentUserId}
-                    onLike={onLike}
-                    onComment={onComment}
-                    onClick={onClick}
-                    onShare={onShare}
-                />
+                {share.is_deleted ? (
+                    <div className="overflow-hidden rounded-lg">
+                        <EmptyState 
+                            icon={FileWarning}
+                            description="Content is not available."
+                        />
+                    </div>
+                ) : (
+                    <Post 
+                        post={share} 
+                        currentUserId={currentUserId}
+                        onLike={onLike}
+                        onComment={onComment}
+                        onClick={onClick}
+                        onShare={onShare}
+                    />
+                )}
             </div>
         </div>
     );

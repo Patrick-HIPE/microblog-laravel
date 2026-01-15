@@ -5,15 +5,31 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Share;
 
 class PostResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
         $user = $request->user();
-        
-        $isShare = $this->resource instanceof \App\Models\Share;
+        $isShare = $this->resource instanceof Share;
         $post = $isShare ? $this->post : $this->resource;
+
+        $isDeleted = !$post || $post->trashed();
+
+        if ($isDeleted && $isShare) {
+            return [
+                'id' => $this->id,
+                'is_share' => true,
+                'is_deleted' => true,
+                'shared_at' => $this->updated_at,
+                'shared_by' => [
+                    'id' => $this->user->id,
+                    'name' => $this->user->name,
+                    'avatar' => $this->user->avatar ? Storage::url($this->user->avatar) : null,
+                ],
+            ];
+        }
 
         if (!$post) return ['id' => $this->id, 'error' => 'Original post deleted'];
 

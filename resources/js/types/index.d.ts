@@ -84,6 +84,7 @@ export interface Post {
 }
 
 export interface Share extends Post {
+    is_deleted: boolean;
     shared_by: PostUser;
     is_share?: boolean;
     shared_at: string;

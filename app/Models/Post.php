@@ -38,7 +38,6 @@ class Post extends Model
             if (!$post->isForceDeleting()) {
                 $post->likes()->delete();
                 $post->comments()->delete();
-                $post->shares()->delete();
             }
         });
 
