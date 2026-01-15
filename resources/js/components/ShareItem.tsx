@@ -36,7 +36,7 @@ export default function ShareItem({ share, currentUserId, onLike, onComment, onC
                 </span>
             </div>
 
-            <div>
+            <div className="mt-1">
                 <Post 
                     post={share} 
                     currentUserId={currentUserId}

@@ -63,7 +63,7 @@ class ProfileController extends Controller
             abort(403, 'Cannot follow yourself.');
         }
 
-        $follow = \App\Models\Follow::withTrashed()
+        $follow = Follow::withTrashed()
             ->where('follower_id', $currentUser->id)
             ->where('user_id', $user->id)
             ->first();
