@@ -52,6 +52,17 @@ class PostResource extends JsonResource
                 'avatar' => $post->user->avatar ? Storage::url($post->user->avatar) : null,
             ],
 
+            'comments' => $post->comments->map(fn($comment) => [
+                'id' => $comment->id,
+                'body' => $comment->body,
+                'created_at' => $comment->created_at,
+                'user' => [
+                    'id' => $comment->user->id,
+                    'name' => $comment->user->name,
+                    'avatar' => $comment->user->avatar ? Storage::url($comment->user->avatar) : null,
+                ],
+            ]),
+
             'shared_at' => $isShare ? $this->updated_at : null,
             'is_share' => $isShare,
 
