@@ -1,45 +1,38 @@
 import AppLayout from '@/layouts/app-layout';
 import CommentModal from '@/components/CommentModal';
 import { dashboard } from '@/routes';
-import { type BreadcrumbItem, type Post as PostType, type User as UserType } from '@/types'; 
+import { type BreadcrumbItem, type Post as PostType, type Share as ShareType, type User as UserType } from '@/types'; 
 import { Head, router, usePage, Link } from '@inertiajs/react'; 
 import { route } from 'ziggy-js';
 import { useState } from 'react'; 
 import Post from '@/components/Post';
+import ShareItem from '@/components/ShareItem';
 import { FileText, User } from 'lucide-react'; 
 import FlashMessage from '@/components/flash-message';
 import EmptyState from "@/components/EmptyState";
 
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+    PaginationEllipsis,
 } from "@/components/ui/pagination";
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Home', href: dashboard().url },
 ];
 
+type FeedItem = PostType | ShareType;
+
 interface PostCollection {
-    data: PostType[];
-    links: {
-        first: string;
-        last: string;
-        prev: string | null;
-        next: string | null;
-    };
+    data: FeedItem[];
     meta: {
         current_page: number;
         last_page: number;
-        from: number;
-        to: number;
         total: number;
-        path: string;
-        per_page: number;
     };
 }
 
@@ -49,13 +42,11 @@ interface DashboardProps {
 }
 
 interface PageProps {
-    auth: {
-        user: UserType;
-    };
+    auth: { user: UserType };
     [key: string]: unknown; 
 }
 
-const normalizePosts = (rawPosts: PostType[]) => {
+const normalizePosts = (rawPosts: FeedItem[]): FeedItem[] => {
     return rawPosts.map((p) => ({
         ...p,
         updated_at: p.updated_at || p.created_at,
@@ -63,30 +54,25 @@ const normalizePosts = (rawPosts: PostType[]) => {
         comments_count: p.comments_count ?? 0,
         shares_count: p.shares_count ?? 0,
         liked_by_user: p.liked_by_user ?? false,
+        shared_by_user: p.shared_by_user ?? false,
         user: p.user ?? { id: 0, name: 'Unknown User' },
-    }));
+        is_share: p.is_share ?? false,
+        is_deleted: p.is_deleted ?? false,
+    })) as FeedItem[];
 };
 
 export default function Dashboard({ posts, auth_user }: DashboardProps) {
     const { auth } = usePage<PageProps>().props;
     const currentUser = auth_user || auth.user;
 
-    const [postsState, setPosts] = useState<PostType[]>(() => normalizePosts(posts.data));
-    const [prevPostsData, setPrevPostsData] = useState(posts.data);
+    const normalizedPosts = normalizePosts(posts.data);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
+    const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
 
-    if (posts.data !== prevPostsData) {
-        const normalized = normalizePosts(posts.data);
-        setPosts(normalized);
-        setPrevPostsData(posts.data);
-
-        if (selectedPost) {
-            const updated = normalized.find(p => p.id === selectedPost.id);
-            if (updated) setSelectedPost(updated);
-        }
-    }
+    const selectedPost = selectedPostId 
+        ? (normalizedPosts.find(p => p.id === selectedPostId) as PostType) || null 
+        : null;
 
     const handlePostClick = (postId: number) => {
         router.get(route('posts.show', postId));
@@ -104,22 +90,6 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
     };
 
     const handleLike = (postId: number) => {
-        setPosts((currentPosts) => 
-            currentPosts.map((post) => {
-                if (post.id === postId) {
-                    const isNowLiked = !post.liked_by_user;
-                    return {
-                        ...post,
-                        liked_by_user: isNowLiked,
-                        likes_count: isNowLiked 
-                            ? (post.likes_count || 0) + 1 
-                            : (post.likes_count || 0) - 1
-                    };
-                }
-                return post;
-            })
-        );
-
         router.post(route('posts.toggle-like', postId), {}, {
             preserveScroll: true,
             preserveState: true,
@@ -127,22 +97,6 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
     };
 
     const handleShare = (postId: number) => {
-        setPosts((currentPosts) =>
-            currentPosts.map((post) => {
-                if (post.id === postId) {
-                    const isNowShared = !post.shared_by_user;
-                    return {
-                        ...post,
-                        shared_by_user: isNowShared,
-                        shares_count: isNowShared 
-                            ? (post.shares_count || 0) + 1 
-                            : (post.shares_count || 0) - 1
-                    };
-                }
-                return post;
-            })
-        );
-
         router.post(route('posts.share', postId), {}, {
             preserveScroll: true,
             preserveState: true,
@@ -150,40 +104,33 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
     };
 
     const openCommentModal = (post: PostType) => {
-        setSelectedPost(post);
+        setSelectedPostId(post.id);
         setIsModalOpen(true);
     };
 
     const closeCommentModal = () => {
         setIsModalOpen(false);
-        setSelectedPost(null);
+        setSelectedPostId(null);
     };
 
-    const handleDelete = (postId: number) => {
-        if (!confirm('Are you sure you want to delete this post?')) return;
+    const handleDelete = (postId: number, isShare: boolean = false) => {
+        if (!confirm('Are you sure you want to delete this?')) return;
 
-        router.delete(route('posts.destroy', postId), {
-            preserveScroll: true,
-            onSuccess: () => setPosts((prev) => prev.filter((p) => p.id !== postId)),
-        });
+        const deleteRoute = isShare 
+            ? route('shares.destroy', postId) 
+            : route('posts.destroy', postId);
+
+        router.delete(deleteRoute, { preserveScroll: true });
     };
 
     const handleEdit = (post: PostType) => {
         router.get(route('posts.edit', post.id));
     };
 
-    const handlePostUpdate = (updatedPost: PostType) => {
-        const normalizedPost = normalizePosts([updatedPost])[0];
-        setSelectedPost(normalizedPost);
-        setPosts((prevPosts) => 
-            prevPosts.map((p) => (p.id === normalizedPost.id ? normalizedPost : p))
-        );
-    };
-
     const renderPaginationItems = () => {
         const items = [];
-        const maxVisiblePages = 5; 
         const { current_page, last_page } = posts.meta;
+        const maxVisiblePages = 5; 
 
         if (last_page <= maxVisiblePages) {
             for (let i = 1; i <= last_page; i++) items.push(i);
@@ -250,21 +197,33 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
                         </button>
                     </div>
 
-                    {postsState.length ? (
+                    {normalizedPosts.length ? (
                         <>
                             <div className="flex flex-col gap-4">
-                                {postsState.map((post) => (
-                                    <Post
-                                        key={post.id}
-                                        post={post}
-                                        currentUserId={auth.user.id}
-                                        onClick={handlePostClick}
-                                        onLike={handleLike}
-                                        onComment={openCommentModal}
-                                        onShare={handleShare}
-                                        onEdit={handleEdit}
-                                        onDelete={handleDelete}
-                                    />
+                                {normalizedPosts.map((item) => (
+                                    item.is_share ? (
+                                        <ShareItem
+                                            key={`share-${item.id}`} 
+                                            share={item as ShareType}
+                                            currentUserId={auth.user.id}
+                                            onLike={handleLike}
+                                            onComment={openCommentModal}
+                                            onClick={handlePostClick}
+                                            onShare={handleShare}
+                                        />
+                                    ) : (
+                                        <Post
+                                            key={`post-${item.id}`} 
+                                            post={item as PostType}
+                                            currentUserId={auth.user.id}
+                                            onClick={handlePostClick}
+                                            onLike={handleLike}
+                                            onComment={openCommentModal}
+                                            onShare={handleShare}
+                                            onEdit={handleEdit}
+                                            onDelete={() => handleDelete(item.id, false)}
+                                        />
+                                    )
                                 ))}
                             </div>
 
@@ -301,8 +260,8 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
                     ) : (
                         <EmptyState
                             icon={FileText}
-                            title="No posts yet"
-                            description="Create a post or follow other people to see posts here."
+                            title="No activity yet"
+                            description="Follow people or start posting to see updates in your feed."
                         />
                     )}
                 </div>
@@ -313,7 +272,9 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
                 onClose={closeCommentModal}
                 post={selectedPost}
                 currentUser={currentUser} 
-                onPostUpdate={handlePostUpdate}
+                onPostUpdate={() => {
+                    router.reload({ only: ['posts'] });
+                }}
             />
         </AppLayout>
     );

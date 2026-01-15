@@ -70,7 +70,7 @@ export interface PostUser {
 
 export interface Post {
     id: number;
-    content: string;
+    content?: string;
     image_url?: string;
     created_at: string;
     updated_at: string;
@@ -81,6 +81,10 @@ export interface Post {
     shared_by_user: boolean;
     comments?: Comment[];
     user?: PostUser;
+    is_share?: boolean;
+    is_deleted?: boolean;
+    shared_at?: string;
+    shared_by?: PostUser;
 }
 
 export interface Share extends Post {
