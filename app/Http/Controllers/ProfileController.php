@@ -94,7 +94,11 @@ class ProfileController extends Controller
     {
         $currentUser = Auth::user();
 
-        $followers = $user->followers()->get()->map(function ($follower) use ($currentUser) {
+        $user->avatar = $currentUser->avatar ? Storage::url($currentUser->avatar) : null;
+
+        $followersPaginator = $user->followers()->paginate(2);
+
+        $followersPaginator->through(function ($follower) use ($currentUser) {
             return [
                 'id' => $follower->id,
                 'name' => $follower->name,
@@ -106,7 +110,7 @@ class ProfileController extends Controller
 
         return Inertia::render('profile/followers', [
             'user' => $user,
-            'followers' => $followers,
+            'followers' => $followersPaginator,
             'current_user_id' => $currentUser?->id,
         ]);
     }
@@ -117,6 +121,8 @@ class ProfileController extends Controller
     public function following(User $user)
     {
         $currentUser = Auth::user();
+
+        $currentUser->avatar = $currentUser->avatar ? Storage::url($currentUser->avatar) : null;
 
         $following = $user->following()->get()->map(function ($followedUser) use ($currentUser) {
             return [

@@ -101,9 +101,12 @@ export default function ShowPost({ post: initialPost, auth_user }: ShowPostProps
                                     href={route('profile.show', currentPost.user.id)}
                                     className="flex items-center gap-3 group"
                                 >
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-neutral-800">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full">
                                         {currentPost.user.avatar ? (
-                                            <img src={currentPost.user.avatar} alt={currentPost.user.name} className="h-full w-full object-cover" />
+                                            <img 
+                                                src={currentPost.user.avatar} 
+                                                alt={currentPost.user.name} 
+                                                className="h-full w-full object-cover" />
                                         ) : (
                                             <User className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
                                         )}
