@@ -57,6 +57,18 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
     const handlePostClick = (id: number) => router.get(route('posts.show', id));
     const handleLike = (id: number) => router.post(route('posts.toggle-like', id), {}, { preserveScroll: true });
     const handleShare = (id: number) => router.post(route('posts.share', id), {}, { preserveScroll: true });
+    const handleEdit = (post: PostType) => {
+        router.get(route('posts.edit', post.id));
+    };
+    const handleDelete = (postId: number) => {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        router.delete(route('posts.destroy', postId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ['posts'] });
+            },
+        });
+    };
     const openCommentModal = (post: PostType) => { setSelectedPostId(post.id); setIsModalOpen(true); };
     const closeCommentModal = () => { setIsModalOpen(false); setSelectedPostId(null); };
 
@@ -86,9 +98,9 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
                             <div className="flex flex-col gap-4">
                                 {normalizedPosts.map((item) => (
                                     item.is_share ? (
-                                        <ShareItem key={`share-${item.id}`} share={item as ShareType} currentUserId={auth.user.id} onLike={handleLike} onComment={openCommentModal} onClick={handlePostClick} onShare={handleShare} />
+                                        <ShareItem key={`share-${item.id}`} share={item as ShareType} currentUserId={auth.user.id} onLike={handleLike} onComment={openCommentModal} onClick={handlePostClick} onShare={handleShare} onEdit={handleEdit} onDelete={handleDelete} />
                                     ) : (
-                                        <Post key={`post-${item.id}`} post={item as PostType} currentUserId={auth.user.id} onClick={handlePostClick} onLike={handleLike} onComment={openCommentModal} onShare={handleShare} />
+                                        <Post key={`post-${item.id}`} post={item as PostType} currentUserId={auth.user.id} onClick={handlePostClick} onLike={handleLike} onComment={openCommentModal} onShare={handleShare} onEdit={handleEdit} onDelete={handleDelete}  />
                                     )
                                 ))}
                             </div>

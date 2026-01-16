@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { LayoutGrid, House, CircleUserRound } from "lucide-react";
 import AppLogo from "./app-logo";
-import { dashboard } from "@/routes";
+import { route } from "ziggy-js";
 import { type NavItem, type SharedData } from "@/types";
 
 export function AppSidebar() {
@@ -21,18 +21,24 @@ export function AppSidebar() {
     const userId = auth?.user?.id;
 
     const mainNavItems: NavItem[] = [
-        { title: "Home", href: dashboard(), icon: House },
-        { title: "My Posts", href: "/posts", icon: LayoutGrid },
+        { 
+            title: "Home", 
+            href: route("dashboard"),
+            icon: House 
+        },
+        { 
+            title: "My Posts", 
+            href: route("posts.index"),
+            icon: LayoutGrid 
+        },
         {
             title: "Profile",
-            href: userId ? `/profile/${userId}` : "#",
+            href: userId ? route("profile.show", { user: userId }) : "#",
             icon: CircleUserRound,
         },
     ];
 
-    const footerNavItems: NavItem[] = [
-        
-    ];
+    const footerNavItems: NavItem[] = [];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -40,7 +46,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={route("dashboard")} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -54,7 +60,6 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                
                 {auth.user && <NavUser />}
             </SidebarFooter>
         </Sidebar>
