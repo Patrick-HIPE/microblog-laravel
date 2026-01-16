@@ -327,6 +327,8 @@ export default function Show({
                                             onComment={openCommentModal}
                                             onClick={handlePostClick}
                                             onShare={handleShare}
+                                            onEdit={handleEdit}
+                                            onDelete={handleDelete}
                                         />
                                     ))}
                                 </div>

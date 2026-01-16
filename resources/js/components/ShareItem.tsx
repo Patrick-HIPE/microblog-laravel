@@ -10,9 +10,11 @@ interface ShareItemProps {
     onComment: (post: PostType) => void;
     onClick: (postId: number) => void;
     onShare: (postId: number) => void;
+    onEdit?: (post: PostType) => void;
+    onDelete?: (postId: number) => void;
 }
 
-export default function ShareItem({ share, currentUserId, onLike, onComment, onClick, onShare }: ShareItemProps) {
+export default function ShareItem({ share, currentUserId, onLike, onComment, onClick, onShare, onEdit, onDelete }: ShareItemProps) {
     if (!share) return null;
 
     const shareDate = share.shared_at ? new Date(share.shared_at).toLocaleDateString(undefined, {
@@ -53,6 +55,8 @@ export default function ShareItem({ share, currentUserId, onLike, onComment, onC
                         onComment={onComment}
                         onClick={onClick}
                         onShare={onShare}
+                        onEdit={onEdit}   
+                        onDelete={onDelete}
                     />
                 )}
             </div>
