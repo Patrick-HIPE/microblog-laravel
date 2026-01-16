@@ -12,14 +12,7 @@ import EmptyState from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShareItem from "@/components/ShareItem";
-import { Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-    PaginationEllipsis,
-} from "@/components/ui/pagination";
+import PaginationLinks from '@/components/PaginationLinks';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: "Profile", href: "/profile" },
@@ -72,7 +65,10 @@ export default function Show({
 
     const [isFollowed, setIsFollowed] = useState(user_is_followed);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("posts");
+    
+    const queryParams = new URLSearchParams(window.location.search);
+    const initialTab = queryParams.get('tab') || "posts";
+    const [activeTab, setActiveTab] = useState(initialTab);
 
     const [postsState, setPosts] = useState<PostType[]>(posts.data);
     const [sharesState, setShares] = useState<ShareType[]>(shares.data);
@@ -82,8 +78,8 @@ export default function Show({
     const [prevSharesData, setPrevSharesData] = useState(shares.data);
 
     if (posts.data !== prevPostsData) {
-        setPosts(posts.data);
         setPrevPostsData(posts.data);
+        setPosts(posts.data);
         
         if (selectedPost) {
             const updated = posts.data.find(p => p.id === selectedPost.id);
@@ -92,67 +88,14 @@ export default function Show({
     }
 
     if (shares.data !== prevSharesData) {
-        setShares(shares.data);
         setPrevSharesData(shares.data);
+        setShares(shares.data);
     }
 
     const isOwnProfile = current_user_id === user.id;
-    const currentMeta = activeTab === 'posts' ? posts.meta : shares.meta;
 
-    const handlePageChange = (page: number) => {
-        if (page < 1 || page > currentMeta.last_page || page === currentMeta.current_page) return;
-        router.get(window.location.pathname, { page, tab: activeTab }, {
-            preserveState: true,
-            preserveScroll: false,
-            onSuccess: () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            },
-        });
-    };
-
-    const renderPaginationItems = () => {
-        const items = [];
-        const maxVisiblePages = 5;
-        const { current_page, last_page } = currentMeta;
-
-        if (last_page <= maxVisiblePages) {
-            for (let i = 1; i <= last_page; i++) items.push(i);
-        } else {
-            items.push(1);
-            if (current_page > 3) items.push('ellipsis-start');
-
-            const start = Math.max(2, current_page - 1);
-            const end = Math.min(last_page - 1, current_page + 1);
-
-            for (let i = start; i <= end; i++) items.push(i);
-
-            if (current_page < last_page - 2) items.push('ellipsis-end');
-            items.push(last_page);
-        }
-
-        return items.map((item, index) => {
-            if (typeof item === 'number') {
-                return (
-                    <PaginationItem key={index}>
-                        <PaginationLink
-                            href="#"
-                            isActive={item === current_page}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handlePageChange(item);
-                            }}
-                        >
-                            {item}
-                        </PaginationLink>
-                    </PaginationItem>
-                );
-            }
-            return (
-                <PaginationItem key={index}>
-                    <PaginationEllipsis />
-                </PaginationItem>
-            );
-        });
+    const updateItemInList = <T extends { id: number }>(list: T[], postId: number, updater: (item: T) => T) => {
+        return list.map(item => item.id === postId ? updater(item) : item);
     };
 
     const handleFollow = () => {
@@ -170,9 +113,7 @@ export default function Show({
         router.get(route("posts.show", postId));
     };
 
-    const updateItemInList = <T extends { id: number }>(list: T[], postId: number, updater: (item: T) => T) => {
-        return list.map(item => item.id === postId ? updater(item) : item);
-    };
+    {/* Handle like and share posts */}
 
     const handleLike = (postId: number) => {
         const toggleLike = <T extends PostType | ShareType>(item: T): T => {
@@ -228,6 +169,19 @@ export default function Show({
         setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)));
     };
 
+    const handleTabChange = (value: string) => {
+        setActiveTab(value);
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', value);
+        window.history.replaceState({}, '', url.toString());
+    };
+
+    {/* Handle edit and delete posts */}
+
+    const handleEdit = (post: PostType) => {
+        router.get(route('posts.edit', post.id));
+    };
+
     const handleDelete = (postId: number) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
         router.delete(route('posts.destroy', postId), {
@@ -237,10 +191,6 @@ export default function Show({
                 setShares((prev) => prev.filter((s) => s.id !== postId));
             },
         });
-    };
-
-    const handleEdit = (post: PostType) => {
-        router.get(route('posts.edit', post.id));
     };
 
     const followersCount = user.followers_count ?? user.followers?.length ?? 0;
@@ -313,7 +263,7 @@ export default function Show({
                                     className={`cursor-pointer transition-colors ${isFollowed
                                         ? "bg-neutral-500 hover:bg-neutral-600"
                                         : "bg-blue-500 hover:bg-blue-600"
-                                        }`}
+                                    }`}
                                 >
                                     {isFollowed ? "Following" : "Follow"}
                                 </Button>
@@ -322,7 +272,7 @@ export default function Show({
                     </div>
                 </div>
 
-                <Tabs defaultValue="posts" className="w-full" onValueChange={setActiveTab}>
+                <Tabs defaultValue={activeTab} className="w-full" onValueChange={handleTabChange}>
                     <TabsList className="mb-3 flex w-full h-auto sm:w-max gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
                         {tabItems.map((tab) => (
                             <TabsTrigger key={tab.value} value={tab.value} className={tabTriggerClasses}>
@@ -350,6 +300,10 @@ export default function Show({
                                         </div>
                                     ))}
                                 </div>
+                                <PaginationLinks 
+                                    meta={posts.meta} 
+                                    params={{ tab: 'posts' }} 
+                                />
                             </>
                         ) : (
                             <EmptyState
@@ -362,19 +316,25 @@ export default function Show({
 
                     <TabsContent value="shares" className="mt-0">
                         {sharesState.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
-                                {sharesState.map((share) => (
-                                    <ShareItem 
-                                        key={share.id}
-                                        share={share}
-                                        currentUserId={auth.user.id}
-                                        onLike={handleLike}
-                                        onComment={openCommentModal}
-                                        onClick={handlePostClick}
-                                        onShare={handleShare}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
+                                    {sharesState.map((share) => (
+                                        <ShareItem 
+                                            key={share.id}
+                                            share={share}
+                                            currentUserId={auth.user.id}
+                                            onLike={handleLike}
+                                            onComment={openCommentModal}
+                                            onClick={handlePostClick}
+                                            onShare={handleShare}
+                                        />
+                                    ))}
+                                </div>
+                                <PaginationLinks 
+                                    meta={shares.meta} 
+                                    params={{ tab: 'shares' }} 
+                                />
+                            </>
                         ) : (
                             <EmptyState
                                 icon={Share2}
@@ -383,38 +343,6 @@ export default function Show({
                             />
                         )}
                     </TabsContent>
-                    
-                    {currentMeta.last_page > 1 && (activeTab === 'posts' ? postsState.length > 0 : sharesState.length > 0) && (
-                         <div className="mt-10">
-                            <Pagination>
-                                <PaginationContent>
-                                    <PaginationItem>
-                                        <PaginationPrevious
-                                            href="#"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handlePageChange(currentMeta.current_page - 1);
-                                            }}
-                                            className={currentMeta.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                        />
-                                    </PaginationItem>
-
-                                    {renderPaginationItems()}
-
-                                    <PaginationItem>
-                                        <PaginationNext
-                                            href="#"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handlePageChange(currentMeta.current_page + 1);
-                                            }}
-                                            className={currentMeta.current_page >= currentMeta.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                        />
-                                    </PaginationItem>
-                                </PaginationContent>
-                            </Pagination>
-                        </div>
-                    )}
                 </Tabs>
             </div>
 

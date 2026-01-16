@@ -8,15 +8,7 @@ import { Button } from "@/components/ui/button";
 import FlashMessage from '@/components/flash-message';
 import EmptyState from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
-import { 
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-    PaginationEllipsis,
-} from "@/components/ui/pagination";
+import PaginationLinks from "@/components/PaginationLinks";
 
 interface Follower extends UserType {
     user_is_followed: boolean;
@@ -43,13 +35,15 @@ interface Props {
 export default function Followers({ user, followers, current_user_id }: Props) {
     const [followersList, setFollowersList] = useState(followers?.data || []);
     
+    // Sync state if props change (e.g., after pagination)
     const [prevData, setPrevData] = useState(followers?.data);
     if (followers?.data !== prevData) {
         setFollowersList(followers?.data || []);
         setPrevData(followers?.data);
     }
 
-    const pagination = useMemo(() => ({
+    // Normalizing pagination metadata for the component
+    const paginationMeta = useMemo(() => ({
         current_page: followers?.meta?.current_page ?? followers?.current_page ?? 1,
         last_page: followers?.meta?.last_page ?? followers?.last_page ?? 1,
         total: followers?.meta?.total ?? followers?.total ?? 0,
@@ -59,14 +53,6 @@ export default function Followers({ user, followers, current_user_id }: Props) {
         { title: 'Profile', href: route('profile.show', { user: user.id }) },
         { title: 'Followers', href: '#' },
     ];
-
-    const handlePageChange = (page: number) => {
-        if (page < 1 || page > pagination.last_page || page === pagination.current_page) return;
-        router.get(window.location.pathname, { page }, {
-            preserveState: true,
-            preserveScroll: false,
-        });
-    };
 
     const toggleFollow = (targetUser: Follower) => {
         setFollowersList(prev => prev.map(f => 
@@ -79,41 +65,6 @@ export default function Followers({ user, followers, current_user_id }: Props) {
         });
     };
 
-    const renderPaginationItems = () => {
-        const items = [];
-        const { current_page, last_page } = pagination;
-        const maxVisible = 5;
-
-        if (last_page <= maxVisible) {
-            for (let i = 1; i <= last_page; i++) items.push(i);
-        } else {
-            items.push(1);
-            if (current_page > 3) items.push('ellipsis-start');
-            const start = Math.max(2, current_page - 1);
-            const end = Math.min(last_page - 1, current_page + 1);
-            for (let i = start; i <= end; i++) items.push(i);
-            if (current_page < last_page - 2) items.push('ellipsis-end');
-            items.push(last_page);
-        }
-
-        return items.map((item, index) => {
-            if (typeof item === 'number') {
-                return (
-                    <PaginationItem key={index}>
-                        <PaginationLink
-                            href="#"
-                            isActive={item === current_page}
-                            onClick={(e) => { e.preventDefault(); handlePageChange(item); }}
-                        >
-                            {item}
-                        </PaginationLink>
-                    </PaginationItem>
-                );
-            }
-            return <PaginationItem key={index}><PaginationEllipsis /></PaginationItem>;
-        });
-    };
-
     if (!followers) return null;
 
     return (
@@ -123,6 +74,7 @@ export default function Followers({ user, followers, current_user_id }: Props) {
 
             <div className="mx-auto w-full max-w-2xl px-4 py-8">
                 
+                {/* Header Section */}
                 <div className="mb-8 flex items-center gap-4 px-2">
                     <button 
                         onClick={() => window.history.back()}
@@ -136,7 +88,7 @@ export default function Followers({ user, followers, current_user_id }: Props) {
                             <img
                                 src={user.avatar}
                                 alt={user.name}
-                                className="h-14 w-14 object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                className="h-14 w-14 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                             />
                         ) : (
                             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 ring-2 ring-transparent group-hover:ring-blue-500/30 transition-all border border-neutral-200 dark:border-neutral-700">
@@ -150,11 +102,12 @@ export default function Followers({ user, followers, current_user_id }: Props) {
                             {user.name}
                         </h1>
                         <p className="text-sm font-medium text-neutral-500">
-                            {pagination.total} Followers
+                            {paginationMeta.total} Followers
                         </p>
                     </div>
                 </div>
 
+                {/* List Container */}
                 <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900 overflow-hidden">
                     {followersList.length > 0 ? (
                         <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
@@ -216,31 +169,11 @@ export default function Followers({ user, followers, current_user_id }: Props) {
                     )}
                 </div>
 
-                {pagination.last_page > 1 && (
-                    <div className="mt-8">
-                        <Pagination>
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious 
-                                        href="#" 
-                                        onClick={(e) => { e.preventDefault(); handlePageChange(pagination.current_page - 1); }}
-                                        className={pagination.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-
-                                {renderPaginationItems()}
-
-                                <PaginationItem>
-                                    <PaginationNext 
-                                        href="#" 
-                                        onClick={(e) => { e.preventDefault(); handlePageChange(pagination.current_page + 1); }}
-                                        className={pagination.current_page >= pagination.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
-                    </div>
-                )}
+                {/* Simplified Pagination using your component */}
+                <PaginationLinks 
+                    meta={paginationMeta} 
+                    pageName="page" 
+                />
             </div>
         </AppLayout>
     );

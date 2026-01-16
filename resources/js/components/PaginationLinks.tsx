@@ -14,18 +14,29 @@ interface Props {
         current_page: number;
         last_page: number;
     };
-    params?: Record<string, string | number>; // For extra data like { tab: 'shares' }
+    pageName?: string; // e.g. 'posts_page' or 'shares_page'
+    params?: Record<string, string | number>; // e.g. { tab: 'posts' }
 }
 
-export default function PaginationLinks({ meta, params = {} }: Props) {
+export default function PaginationLinks({ meta, pageName = 'page', params = {} }: Props) {
     const { current_page, last_page } = meta;
 
     const handlePageChange = (page: number) => {
         if (page < 1 || page > last_page || page === current_page) return;
 
-        router.get(window.location.pathname, { ...params, page }, {
+        // 1. Get all current URL parameters so we don't lose the state of other lists on the page
+        const currentParams = Object.fromEntries(new URLSearchParams(window.location.search));
+
+        // 2. Merge existing params with new specific params
+        const newParams = {
+            ...currentParams, // Keep existing (e.g. shares_page=2 when moving posts_page)
+            ...params,        // Add forced params (e.g. tab='posts')
+            [pageName]: page  // Update ONLY the specific page number key
+        };
+
+        router.get(window.location.pathname, newParams, {
             preserveState: true,
-            preserveScroll: false, // Profile usually feels better scrolling to top on page change
+            preserveScroll: false,
             onSuccess: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
         });
     };

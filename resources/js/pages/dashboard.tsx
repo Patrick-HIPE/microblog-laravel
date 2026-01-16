@@ -12,7 +12,9 @@ import FlashMessage from '@/components/flash-message';
 import EmptyState from "@/components/EmptyState";
 import PaginationLinks from '@/components/PaginationLinks';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Home', href: dashboard().url }];
+const breadcrumbs: BreadcrumbItem[] = [{ 
+    title: 'Home', href: dashboard().url 
+}];
 
 interface DashboardProps {
     posts: {
@@ -22,8 +24,13 @@ interface DashboardProps {
     auth_user?: UserType;
 }
 
+interface PageProps {
+    auth: { user: UserType };
+    [key: string]: unknown; 
+}
+
 export default function Dashboard({ posts, auth_user }: DashboardProps) {
-    const { auth } = usePage<any>().props;
+    const { auth } = usePage<PageProps>().props;
     const currentUser = auth_user || auth.user;
 
     const normalizedPosts = useMemo(() => {
@@ -63,10 +70,13 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
                     <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                         <Link href={route('profile.show', currentUser.id)}>
                             <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
-                                {currentUser.avatar ? <img src={currentUser.avatar} className="h-full w-full object-cover" /> : <User className="m-auto h-5 w-5 text-neutral-400" />}
+                                {currentUser.avatar ? <img src={currentUser.avatar} className="h-full w-full object-cover" /> : <User className="m-auto h-10 w-5 text-neutral-400" />}
                             </div>
                         </Link>
-                        <button onClick={() => router.get(route('posts.create'))} className="flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2.5 text-left text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-750 dark:hover:border-neutral-600 transition-colors cursor-text">
+                        <button onClick={() => 
+                            router.get(route('posts.create'))} 
+                            className="flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2.5 text-left text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-750 dark:hover:border-neutral-600 transition-colors cursor-text"
+                        >
                             What's on your mind?
                         </button>
                     </div>
@@ -91,7 +101,13 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
                 </div>
             </div>
 
-            <CommentModal isOpen={isModalOpen} onClose={closeCommentModal} post={selectedPost} currentUser={currentUser} onPostUpdate={() => router.reload({ only: ['posts'] })} />
+            <CommentModal 
+                isOpen={isModalOpen} 
+                onClose={closeCommentModal} 
+                post={selectedPost} 
+                currentUser={currentUser} 
+                onPostUpdate={() => router.reload({ only: ['posts'] })} 
+            />
         </AppLayout>
     );
 }

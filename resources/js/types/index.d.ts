@@ -70,7 +70,7 @@ export interface PostUser {
 
 export interface Post {
     id: number;
-    content?: string;
+    content: string;
     image_url?: string;
     created_at: string;
     updated_at: string;

@@ -7,18 +7,9 @@ import FlashMessage from '@/components/flash-message';
 import CommentModal from '@/components/CommentModal';
 import Post from '@/components/Post';
 import EmptyState from "@/components/EmptyState";
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FileText, Plus } from 'lucide-react';
-
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
+import PaginationLinks from '@/components/PaginationLinks';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'My Posts', href: route('posts.index') },
@@ -69,21 +60,31 @@ export default function Index({ posts, auth_user }: Props) {
     const { auth } = usePage<PageProps>().props; 
     const currentUser = auth_user || auth.user;
 
-    const [postsState, setPosts] = useState<PostType[]>(() => normalizePosts(posts.data));
+    const normalizedData = useMemo(() => normalizePosts(posts.data), [posts.data]);
+
+    const [postsState, setPosts] = useState<PostType[]>(normalizedData);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
-    const [prevPostsData, setPrevPostsData] = useState(posts.data);
 
-    if (posts.data !== prevPostsData) {
-        const normalized = normalizePosts(posts.data);
-        setPosts(normalized);
-        setPrevPostsData(posts.data);
+    useEffect(() => {
+        setPosts(normalizedData);
+    }, [normalizedData]);
 
+    useEffect(() => {
         if (selectedPost) {
-            const updated = normalized.find(p => p.id === selectedPost.id);
-            if (updated) setSelectedPost(updated);
+            const updated = normalizedData.find(p => p.id === selectedPost.id);
+            
+            if (updated && updated !== selectedPost) {
+                setSelectedPost(updated);
+            }
         }
-    }
+    }, [normalizedData, selectedPost]);
+
+    {/* Handle edit and delete posts */}
+ 
+    const handleEdit = (post: PostType) => {
+        router.get(route('posts.edit', post.id));
+    };
 
     const handleDelete = (postId: number) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
@@ -94,9 +95,7 @@ export default function Index({ posts, auth_user }: Props) {
         });
     };
 
-    const handleEdit = (post: PostType) => {
-        router.get(route('posts.edit', post.id));
-    };
+    {/* Handle like and share posts */}
 
     const handleLike = (postId: number) => {
         setPosts((currentPosts) => 
@@ -116,6 +115,29 @@ export default function Index({ posts, auth_user }: Props) {
         );
 
         router.post(route('posts.toggle-like', { post: postId }), {}, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    };
+
+    const handleShare = (postId: number) => {
+        setPosts((currentPosts) =>
+            currentPosts.map((post) => {
+                if (post.id === postId) {
+                    const isNowShared = !post.shared_by_user;
+                    return {
+                        ...post,
+                        shared_by_user: isNowShared,
+                        shares_count: isNowShared 
+                            ? (post.shares_count || 0) + 1 
+                            : (post.shares_count || 0) - 1
+                    };
+                }
+                return post;
+            })
+        );
+
+        router.post(route('posts.share', postId), {}, {
             preserveScroll: true,
             preserveState: true,
         });
@@ -149,84 +171,6 @@ export default function Index({ posts, auth_user }: Props) {
         setPosts((prevPosts) =>
             prevPosts.map((p) => (p.id === normalizedPost.id ? normalizedPost : p))
         );
-    };
-
-    const handleShare = (postId: number) => {
-        setPosts((currentPosts) =>
-            currentPosts.map((post) => {
-                if (post.id === postId) {
-                    const isNowShared = !post.shared_by_user;
-                    return {
-                        ...post,
-                        shared_by_user: isNowShared,
-                        shares_count: isNowShared 
-                            ? (post.shares_count || 0) + 1 
-                            : (post.shares_count || 0) - 1
-                    };
-                }
-                return post;
-            })
-        );
-
-        router.post(route('posts.share', postId), {}, {
-            preserveScroll: true,
-            preserveState: true,
-        });
-    };
-
-    const handlePageChange = (page: number) => {
-        const { current_page, last_page } = posts.meta;
-        if (page < 1 || page > last_page || page === current_page) return;
-        
-        router.get(route('posts.index'), { page }, {
-            preserveState: true,
-            preserveScroll: false, 
-            onSuccess: () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        });
-    };
-
-    const renderPaginationItems = () => {
-        const items = [];
-        const maxVisiblePages = 5;
-        const { current_page, last_page } = posts.meta;
-
-        if (last_page <= maxVisiblePages) {
-            for (let i = 1; i <= last_page; i++) items.push(i);
-        } else {
-            items.push(1);
-            if (current_page > 3) items.push('ellipsis-start');
-            const start = Math.max(2, current_page - 1);
-            const end = Math.min(last_page - 1, current_page + 1);
-            for (let i = start; i <= end; i++) items.push(i);
-            if (current_page < last_page - 2) items.push('ellipsis-end');
-            items.push(last_page);
-        }
-
-        return items.map((item, index) => {
-            if (typeof item === 'number') {
-                return (
-                    <PaginationItem key={index}>
-                        <PaginationLink
-                            href="#"
-                            isActive={item === current_page}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handlePageChange(item);
-                            }}
-                        >
-                            {item}
-                        </PaginationLink>
-                    </PaginationItem>
-                );
-            }
-            return (
-                <PaginationItem key={index}>
-                    <PaginationEllipsis />
-                </PaginationItem>
-            );
-        });
     };
 
     return (
@@ -272,34 +216,8 @@ export default function Index({ posts, auth_user }: Props) {
                             ))}
                         </div>
 
-                        <div className="mt-10">
-                            <Pagination>
-                                <PaginationContent>
-                                    <PaginationItem>
-                                        <PaginationPrevious 
-                                            href="#"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handlePageChange(posts.meta.current_page - 1);
-                                            }}
-                                            className={posts.meta.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                        />
-                                    </PaginationItem>
-
-                                    {renderPaginationItems()}
-
-                                    <PaginationItem>
-                                        <PaginationNext 
-                                            href="#"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                handlePageChange(posts.meta.current_page + 1);
-                                            }}
-                                            className={posts.meta.current_page >= posts.meta.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                        />
-                                    </PaginationItem>
-                                </PaginationContent>
-                            </Pagination>
+                        <div className="mt-8">
+                            <PaginationLinks meta={posts.meta} />
                         </div>
                     </>
                 ) : (
