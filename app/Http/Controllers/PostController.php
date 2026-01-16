@@ -2,31 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-use App\Models\Post;
-use App\Models\Like;
-use App\Models\Share;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use App\Http\Resources\PostResource;
+use App\Models\Post;
+use App\Services\PostService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use App\Http\Resources\PostResource;
+use Inertia\Inertia;
 
 class PostController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Display a listing of the posts for the authenticated user.
-     */
+    public function __construct(protected PostService $postService)
+    {
+    }
+
     public function index()
     {
-        $posts = Post::where('user_id', Auth::id())
-            ->with(['user', 'likes', 'shares', 'comments.user'])
-            ->withCount(['likes', 'shares', 'comments'])
-            ->latest()
-            ->paginate(6);
+        $posts = $this->postService->getPostsForUser(Auth::id());
 
         return Inertia::render('post/index', [
             'posts' => PostResource::collection($posts),
@@ -43,19 +39,19 @@ class PostController extends Controller
         $data = $request->validated();
         $data['user_id'] = Auth::id();
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('posts', 'public');
-        }
+        $this->postService->createPost(
+            $data, 
+            $request->file('image')
+        );
 
-        Post::create($data);
-
-        return redirect()->route('posts.index')->with('success', 'Post created successfully.');
+        return redirect()->route('posts.index')
+            ->with('success', 'Post created successfully.');
     }
 
     public function show(Post $post)
     {
-        $post->load(['user', 'likes', 'shares', 'comments.user']);
-        $post->loadCount(['likes', 'shares', 'comments']);
+        $post->load(['user', 'likes', 'shares', 'comments.user'])
+             ->loadCount(['likes', 'shares', 'comments']);
 
         return Inertia::render('post/show', [
             'post' => (new PostResource($post))->resolve(),
@@ -65,97 +61,52 @@ class PostController extends Controller
     public function edit(Post $post)
     {
         $this->authorize('update', $post);
+        
         $post->image_url = $post->image ? Storage::url($post->image) : null;
-        return Inertia::render('post/edit', [ 'post' => $post ]);
+        
+        return Inertia::render('post/edit', ['post' => $post]);
     }
 
     public function update(UpdatePostRequest $request, Post $post)
     {
         $this->authorize('update', $post);
-        $data = $request->validated();
 
-        if ($request->hasFile('image')) {
-            if ($post->image) {
-                Storage::disk('public')->delete($post->image);
-            }
-            $data['image'] = $request->file('image')->store('posts', 'public');
-        } elseif ($request->boolean('removeImage')) {
-            if ($post->image) {
-                Storage::disk('public')->delete($post->image);
-            }
-            $data['image'] = null;
-        } else {
-            unset($data['image']);
-        }
+        $this->postService->updatePost(
+            $post,
+            $request->validated(),
+            $request->file('image'),
+            $request->boolean('removeImage')
+        );
 
-        unset($data['_method'], $data['removeImage']);
-        $post->update($data);
-
-        return redirect()->route('posts.index')->with('success', 'Post updated successfully.');
+        return redirect()->route('posts.index')
+            ->with('success', 'Post updated successfully.');
     }
 
     public function destroy(Post $post)
     {
         $this->authorize('delete', $post);
-        if ($post->image) {
-            Storage::disk('public')->delete($post->image);
-        }
-        $post->delete();
-        return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
+
+        $this->postService->deletePost($post);
+
+        return redirect()->route('posts.index')
+            ->with('success', 'Post deleted successfully.');
     }
 
     public function like(Post $post)
     {
-        $user = Auth::user();
-        if (!$user) abort(403);
+        if (!Auth::check()) abort(403);
 
-        $like = Like::withTrashed()
-            ->where('user_id', $user->id)
-            ->where('post_id', $post->id)
-            ->first();
-
-        if (!$like) {
-            Like::create([
-                'user_id' => $user->id,
-                'post_id' => $post->id
-            ]);
-            $message = 'Post liked.';
-        } elseif ($like->trashed()) {
-            $like->restore();
-            $message = 'Like restored.';
-        } else {
-            $like->delete();
-            $message = 'Post unliked.';
-        }
+        $message = $this->postService->toggleLike($post, Auth::id());
 
         return back()->with('success', $message);
     }
 
     public function share(Post $post)
     {
-        $user = Auth::user();
-        if (!$user) abort(403);
+        if (!Auth::check()) abort(403);
 
-        $share = Share::withTrashed()
-            ->where('user_id', $user->id)
-            ->where('post_id', $post->id)
-            ->first();
+        $result = $this->postService->toggleShare($post, Auth::id());
 
-        if (!$share) {
-            try {
-                $post->shares()->create(['user_id' => $user->id]);
-                $message = 'Post shared.';
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                return back()->with('info', 'Already shared.');
-            }
-        } elseif ($share->trashed()) {
-            $share->restore();
-            $message = 'Share restored.';
-        } else {
-            $share->delete();
-            $message = 'Post unshared.';
-        }
-
-        return back()->with('success', $message);
+        return back()->with($result['status'], $result['message']);
     }
 }

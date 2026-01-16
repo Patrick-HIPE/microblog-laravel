@@ -71,12 +71,12 @@ export interface PostUser {
 export interface Post {
     id: number;
     content: string;
-    image_url?: string;
+    image_url: string;
     created_at: string;
     updated_at: string;
     likes_count: number;
-    comments_count?: number;
-    shares_count?: number;
+    comments_count: number;
+    shares_count: number;
     liked_by_user: boolean;
     shared_by_user: boolean;
     comments?: Comment[];

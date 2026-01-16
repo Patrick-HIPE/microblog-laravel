@@ -4,44 +4,48 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Post;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Services\CommentService;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\RedirectResponse;
 
 class CommentController extends Controller
 {
     use AuthorizesRequests;
 
-    public function store(StoreCommentRequest $request, Post $post)
-    {
-        $data = $request->validated();
+    public function __construct(
+        protected CommentService $commentService
+    ) {}
 
-        $post->comments()->create([
-            'user_id' => $request->user()->id,
-            'body' => $data['body'],
-        ]);
+    public function store(StoreCommentRequest $request, Post $post): RedirectResponse
+    {
+        $this->commentService->createComment(
+            $post,
+            $request->user(),
+            $request->validated()
+        );
 
         return redirect()->back()->with('message', 'Comment created successfully!');
     }
 
-    public function update(UpdateCommentRequest $request, Comment $comment)
+    public function update(UpdateCommentRequest $request, Comment $comment): RedirectResponse
     {
         $this->authorize('update', $comment);
 
-        $request->validated();
-
-        $comment->update(['body' => $request->body]);
+        $this->commentService->updateComment(
+            $comment,
+            $request->validated()
+        );
 
         return redirect()->back()->with('message', 'Comment updated successfully!');
     }
 
-    public function destroy(Comment $comment)
+    public function destroy(Comment $comment): RedirectResponse
     {
         $this->authorize('delete', $comment);
 
-        $comment->delete();
+        $this->commentService->deleteComment($comment);
 
         return redirect()->back()->with('message', 'Comment deleted successfully!');
     }
