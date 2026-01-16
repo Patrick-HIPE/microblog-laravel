@@ -18,17 +18,20 @@ class DashboardController extends Controller
         $followingIds = $user->following()->pluck('users.id');
         $allowedUserIds = $followingIds->push($user->id);
 
+        $mySharedPostIds = Share::where('user_id', $user->id)->pluck('post_id');
+
         $postsQuery = DB::table('posts')
             ->select('id', 'created_at as activity_at', DB::raw("'post' as type"))
-            ->whereIn('user_id', $allowedUserIds);
+            ->whereIn('user_id', $allowedUserIds)
+            ->whereNotIn('id', $mySharedPostIds);
 
         $activityPage = DB::table('shares')
-            ->select('id', 'updated_at as activity_at', DB::raw("'share' as type"))
+            ->select('id', 'created_at as activity_at', DB::raw("'share' as type"))
             ->whereIn('user_id', $allowedUserIds)
             ->union($postsQuery)
             ->orderBy('activity_at', 'desc')
             ->paginate(10);
-
+        
         $postIds = [];
         $shareIds = [];
         foreach ($activityPage as $item) {

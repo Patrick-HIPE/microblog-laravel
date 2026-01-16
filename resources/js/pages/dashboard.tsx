@@ -55,20 +55,23 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
     , [selectedPostId, normalizedPosts]);
 
     const handlePostClick = (id: number) => router.get(route('posts.show', id));
-    const handleLike = (id: number) => router.post(route('posts.toggle-like', id), {}, { preserveScroll: true });
-    const handleShare = (id: number) => router.post(route('posts.share', id), {}, { preserveScroll: true });
-    const handleEdit = (post: PostType) => {
-        router.get(route('posts.edit', post.id));
-    };
+    
+    const handleLike = (id: number) => 
+        router.post(route('posts.toggle-like', id), {}, { preserveScroll: true });
+    
+    const handleShare = (id: number) => 
+        router.post(route('posts.share', id), {}, { preserveScroll: true });
+
+    const handleEdit = (post: PostType) => router.get(route('posts.edit', post.id));
+
     const handleDelete = (postId: number) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
         router.delete(route('posts.destroy', postId), {
             preserveScroll: true,
-            onSuccess: () => {
-                router.reload({ only: ['posts'] });
-            },
+            onSuccess: () => router.reload({ only: ['posts'] }),
         });
     };
+
     const openCommentModal = (post: PostType) => { setSelectedPostId(post.id); setIsModalOpen(true); };
     const closeCommentModal = () => { setIsModalOpen(false); setSelectedPostId(null); };
 
@@ -85,8 +88,8 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
                                 {currentUser.avatar ? <img src={currentUser.avatar} className="h-full w-full object-cover" /> : <User className="m-auto h-10 w-5 text-neutral-400" />}
                             </div>
                         </Link>
-                        <button onClick={() => 
-                            router.get(route('posts.create'))} 
+                        <button 
+                            onClick={() => router.get(route('posts.create'))} 
                             className="flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2.5 text-left text-sm font-medium text-neutral-500 hover:bg-neutral-100 hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-750 dark:hover:border-neutral-600 transition-colors cursor-text"
                         >
                             What's on your mind?
@@ -98,13 +101,32 @@ export default function Dashboard({ posts, auth_user }: DashboardProps) {
                             <div className="flex flex-col gap-4">
                                 {normalizedPosts.map((item) => (
                                     item.is_share ? (
-                                        <ShareItem key={`share-${item.id}`} share={item as ShareType} currentUserId={auth.user.id} onLike={handleLike} onComment={openCommentModal} onClick={handlePostClick} onShare={handleShare} onEdit={handleEdit} onDelete={handleDelete} />
+                                        <ShareItem 
+                                            key={`share-${item.id}`} 
+                                            share={item as ShareType} 
+                                            currentUserId={auth.user.id} 
+                                            onLike={handleLike} 
+                                            onComment={openCommentModal} 
+                                            onClick={handlePostClick} 
+                                            onShare={handleShare} 
+                                            onEdit={handleEdit} 
+                                            onDelete={handleDelete} 
+                                        />
                                     ) : (
-                                        <Post key={`post-${item.id}`} post={item as PostType} currentUserId={auth.user.id} onClick={handlePostClick} onLike={handleLike} onComment={openCommentModal} onShare={handleShare} onEdit={handleEdit} onDelete={handleDelete}  />
+                                        <Post 
+                                            key={`post-${item.id}`} 
+                                            post={item as PostType} 
+                                            currentUserId={auth.user.id} 
+                                            onClick={handlePostClick} 
+                                            onLike={handleLike} 
+                                            onComment={openCommentModal} 
+                                            onShare={handleShare} 
+                                            onEdit={handleEdit} 
+                                            onDelete={handleDelete}  
+                                        />
                                     )
                                 ))}
                             </div>
-
                             <PaginationLinks meta={posts.meta} />
                         </>
                     ) : (

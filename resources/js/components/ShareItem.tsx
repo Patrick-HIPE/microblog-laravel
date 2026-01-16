@@ -1,4 +1,6 @@
 import { Share2, FileWarning } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { route } from 'ziggy-js'; 
 import Post from '@/components/Post';
 import EmptyState from '@/components/EmptyState';
 import { Post as PostType, Share as ShareType } from '@/types';
@@ -29,9 +31,15 @@ export default function ShareItem({ share, currentUserId, onLike, onComment, onC
             <div className="flex items-center justify-between px-2 py-1 text-xs text-gray-500 dark:text-neutral-400">
                 <div className="flex items-center gap-2">
                     <Share2 className="h-3.5 w-3.5 text-blue-500" />
-                    <span className="font-bold text-gray-700 dark:text-gray-200">
+                    
+                    <Link 
+                        href={route('profile.show', share.shared_by?.id)}
+                        className="font-bold text-gray-700 hover:text-blue-600 transition-colors dark:text-gray-200 dark:hover:text-blue-400"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         {share.shared_by?.name}
-                    </span>
+                    </Link>
+
                     <span>shared this</span>
                 </div>
                 <span className="text-[10px] opacity-70">
